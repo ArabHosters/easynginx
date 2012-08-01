@@ -100,6 +100,7 @@ do_Nginx()
  #yum install google-perftools* -y
  yum install gcc* -y
  yum install pcre-devel* -y
+ yum install bc -y
 
  cd /usr/local/
  wget http://nginx.org/download/nginx-1.2.0.tar.gz
@@ -123,9 +124,9 @@ do_phpfpm()
 {
    InsertSection " -- Installing PHP -- "
 
-   yum install libxml2-devel bzip2-devel libjpeg-devel libX11-devel gd-devel libmcrypt-devel mysql-devel mhash-devel libevent-devel libtool-ltdl-devel bzip2-devel.x86_64  curl-devel.x86_64 libc-client-devel.i386 libc-client-devel.i386 zlib-devel libpng-devel libxslt-devel -y
-    yum install gcc* -y
-
+   yum install libxml2-devel bzip2-devel libjpeg-devel libX11-devel gd-devel libmcrypt-devel mysql-devel mhash-devel libevent-devel libtool-ltdl-devel curl-devel.x86_64 libc-client-devel.i386 libc-client-devel.i386 zlib-devel libpng-devel libxslt-devel -y
+   yum install gcc* -y
+   yum install bzip2-devel.x86_64 -y
    cd /usr/local/src
    wget http://autosetup1.googlecode.com/files/php-5.3.10.tar.gz
    tar -xzvf php-5.3.10.tar.gz && cd php-5.3.10
@@ -137,29 +138,29 @@ do_phpfpm()
    #cp /usr/local/php-fpm/etc/{php-fpm.conf.default,php-fpm.conf}
    #sed -i 's/;pid/pid/gi' /usr/local/php-fpm/etc/php-fpm.conf
    #sed -i 's/;error_log/error_log/gi' /usr/local/php-fpm/etc/php-fpm.conf  
-    if [ -e /usr/local/cpanel ]
+   echo "include=/usr/local/php-fpm/etc/conf.d/*.conf" >> /usr/local/php-fpm/etc/php-fpm.conf
+   if [ ! -e /usr/local/cpanel ] && [ ! -d $FPM_PATH/conf.d/  ]
     then
-      echo "include=/usr/local/php-fpm/etc/conf.d/*.conf" >> /usr/local/php-fpm/etc/php-fpm.conf
-    fi 
+	mkdir $FPM_PATH/conf.d
+	cp $BASE/nginx_template/default-fpm-site.tpl $FPM_PATH/conf.d/default-site.conf
+   fi 
    wget $phpini -O /usr/local/php-fpm/lib/php.ini
    wget $phpfpm -O /etc/init.d/php-fpm 
    chmod +x /etc/init.d/php-fpm
    chkconfig --add php-fpm
    chkconfig --levels 235 php-fpm on
    rm -rf /usr/local/src/php-5.3.10
-echo -e " -- PHP Installed\t\t\t [ ${Green}Done${NC} ] "
+   echo -e " -- PHP Installed\t\t\t [ ${Green}Done${NC} ] "
 }
 
 # This function for Copying Nginx Configuration file and for check the services
 do_phpfpmHandelNginx()
 {
 
-   if [ -e /usr/local/cpanel ]
-   then
     mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
     cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
      
-   fi 
+    
     IP=`hostname -i`
     CPU=`cat /proc/cpuinfo |grep -c '^processor'`
     replace REP_IP $IP -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
@@ -186,6 +187,10 @@ InsertSection "Starting the required Service"
        		 	/scripts/rebuildhttpdconf > /dev/null 2>&1
                	 	sleep 1
 		 	echo -e " - Apache Config Rebuild\t\t\t         [ ${Green}Done${NC} ]"
+    	 		/etc/init.d/php-fpm stop > /dev/null 2>&1
+			/etc/init.d/httpd restart
+			/etc/init.d/httpd restart
+			/etc/init.d/nginx start
 		 	/etc/init.d/nginx restart
                      else
                         replace "80" "$Apache_Port" -- /etc/httpd/conf/httpd.conf > /dev/null 2>&1
@@ -286,18 +291,20 @@ echo -e " - Generate Nginx.conf file\t\t\t\t\t [ ${Green}Done${NC} ]"
 
        	if [ "$fpm" == "1" ]
          then
-          VHOST_TEMPLATE=`cat $BASE/nginx_template/main-nginx-phpfpm.conf.tpl`
-cat > $NGINX_PATH/conf/nginx.conf << EOF
+          VHOST_TEMPLATE=`cat $BASE/nginx_template/NocPanel-phpfpm.tpl`
+cat > $NGINX_PATH/vhosts/default.conf << EOF
 $VHOST_TEMPLATE
 EOF
           
         elif [ "$fpm" == "0" ]
 			then
-          VHOST_TEMPLATE=`cat $BASE/nginx_template/main-nginx-reverse.tpl`
-cat > $NGINX_PATH/conf/nginx.conf << EOF
+          VHOST_TEMPLATE=`cat $BASE/nginx_template/NocPanel-reverse.tpl`
+cat > $NGINX_PATH/vhosts/default.conf << EOF
 $VHOST_TEMPLATE
 EOF
-       replace REP_Apache_Port $Apache_Port -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
+	IP=`hostname -i`
+    	replace REP_IP $IP -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1
+        replace REP_Apache_Port $Apache_Port -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1
         fi
   
  else
@@ -336,6 +343,8 @@ echo -e " - Generate Nginx.conf file\t\t\t [ ${Green}Done${NC} ]"
 				mkdir $NGINX_PATH/vhosts
 			fi
 
+      		  	cp -R -f $BASE/nginx_template/maintenance $HOME/
+	  		chown -R $USER.$USER $HOME/maintenance  > /dev/null 2>&1
 
 			if [ "$fpm" == "1" ]
 			then
@@ -349,9 +358,6 @@ echo -e " - Generate Nginx.conf file\t\t\t [ ${Green}Done${NC} ]"
 			FPM_SITE_TEMPLATE=`cat $BASE/nginx_template/fpm-site.tpl`
 
 
-	cp -R -f $BASE/nginx_template/maintenance $HOME/
-	chown -R $USER.$USER $HOME/maintenance  > /dev/null 2>&1
-
 cat > $DOM_CONF << EOF
 $VHOST_TEMPLATE
 EOF
@@ -359,6 +365,7 @@ EOF
 				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
 				replace REP_HOME "$HOME" -- $DOM_CONF > /dev/null 2>&1
 				replace REP_FPMPORT "$fpmport" -- $DOM_CONF > /dev/null 2>&1
+                                replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
 
 
 cat > $DOM_FPM_CONF << EOF

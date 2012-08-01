@@ -10,16 +10,15 @@ server {
   location ~.*\.(3gp|gif|jpg|jpeg|png|ico|wmv|avi|asf|asx|mpg|mpeg|mp4|pls|mp3|mid|wav|swf|flv)$ {
 
              expires 1y;
-             
-   }
+                                                                                                 }
 
-   location ~.*\.(3gp|gif|jpg|jpeg|png|ico|wmv|avi|asf|asx|mpg|mpeg|mp4|pls|mp3|mid|wav|swf|flv)$ {
+  location ~.*\.(3gp|gif|jpg|jpeg|png|ico|wmv|avi|asf|asx|mpg|mpeg|mp4|pls|mp3|mid|wav|swf|flv)$ {
     	     proxy_cache_valid 200 301 302 120m;
              expires 2d;
-             proxy_pass http://10.10.6.230;
+             proxy_pass http://REP_IP;
              proxy_cache one;   
-   }
-    location ~* \.php$ {
+                                                                                                  }
+  location ~* \.php$ {
 	   try_files $uri $uri/ /index.php?$args;
 	   # check existence
 	   if (!-f $document_root$fastcgi_script_name) { return 404; }
@@ -30,33 +29,32 @@ server {
 	   include         fastcgi_params;
 	   fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
 	   fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
-   }
-
-	location ~ /\. {
+                      }
+  location ~ /\. {
 	    access_log off;
 	    log_not_found off;
 	    deny all;
-	}
+	               }
 
-	location = /favicon.ico {
+  location = /favicon.ico {
 		log_not_found off;
 		access_log off;
-	}
+	                        }
 
-	location = /robots.txt {
+  location = /robots.txt {
 			allow all;
 			log_not_found off;
 			access_log off;
-		    }
+		               }
 
 	# Enable permalink structures
 		    if (!-e $request_filename) {
 			rewrite . /index.php last;
-		    }
+		                               }
 	
-location ~ /\.ht {
+  location ~ /\.ht {
         	deny  all;
-    	}
+               	 }
 
 
      ## All other errors get the generic error page
@@ -65,11 +63,11 @@ location ~ /\.ht {
 
                  500 501 502 503 504 505 506 507 /maintenance/error_page.html;
 
-      location  /maintenance/error_page.html {
+   location  /maintenance/error_page.html {
 
           internal;
 
-      }
+                                             }
 
 }
 
