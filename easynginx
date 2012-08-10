@@ -109,6 +109,7 @@ do_Nginx()
  ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module 
  make
  make install 
+
  wget $nginxst -O /etc/init.d/nginx
  chmod +x /etc/init.d/nginx
  
@@ -154,17 +155,9 @@ do_phpfpm()
 }
 
 # This function for Copying Nginx Configuration file and for check the services
-do_phpfpmHandelNginx()
+do_CheckServices()
 {
 
-    mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
-    cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
-     
-    
-    IP=`hostname -i`
-    CPU=`cat /proc/cpuinfo |grep -c '^processor'`
-    replace REP_IP $IP -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
-    replace REP_CORES $CPU -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
     echo -e " - Check for Nginx Configuration file\t\t\t [ ${Green}Done${NC} ]"
 InsertSection "Starting the required Service"
     if [ "$fpm" == "1" ]
@@ -183,10 +176,10 @@ InsertSection "Starting the required Service"
 			chkconfig --levels 235 httpd on
 		 	replace ":80" ":$Apache_Port" -- /usr/local/apache/conf/httpd.conf > /dev/null 2>&1
      	         	replace "apache_port=0.0.0.0:80" "apache_port=0.0.0.0:$Apache_Port" -- /var/cpanel/cpanel.config > /dev/null 2>&1
-    		 	echo -e " - Updated Apache Port on Tweak Setting\t\t\t [ ${Green}Done${NC} ]"
+    		 	echo -e " - Updated Apache Port on Tweak Setting  \t\t\t [ ${Green}Done${NC} ]"
        		 	/scripts/rebuildhttpdconf > /dev/null 2>&1
                	 	sleep 1
-		 	echo -e " - Apache Config Rebuild\t\t\t         [ ${Green}Done${NC} ]"
+		 	echo -e " - Apache Config Rebuild  \t\t\t         [ ${Green}Done${NC} ]"
     	 		/etc/init.d/php-fpm stop > /dev/null 2>&1
 			/etc/init.d/httpd restart
 			/etc/init.d/httpd restart
@@ -216,7 +209,7 @@ do_mysql()
 }
 
 # This function for Installing Mod_RPAF
-doRpaf()
+do_Rpaf()
 {
 InsertSection "Installing Apache Mod_RPAF"
 
@@ -231,7 +224,7 @@ else
 	tar -zxf mod_rpaf-0.6.tar.gz > /dev/null 2>&1
 	cd mod_rpaf-0.6
 	make rpaf-2.0 && make install-2.0 > /dev/null 2>&1
-	apxs -i -c -n mod_rpaf-2.0.so mod_rpaf-2.0.c > /dev/null 2>&1
+	/usr/local/apache/bin/apxs -i -c -n mod_rpaf-2.0.so mod_rpaf-2.0.c > /dev/null 2>&1
 	# fix mod_rpaf 'can't load module' 23Nov 2010
 	if [ -e /usr/lib64/httpd/modules/mod_rpaf-2.0.so ]
 	then
@@ -258,7 +251,7 @@ fi
 }
 
 # This function for Installing Vhosts Configuration files
-doConfig()
+do_Config()
 {
 
 
@@ -279,6 +272,14 @@ PAM_MAX=`echo $RAM_use/50 |bc`
 cd ${BASE}
 wget -q $CONF_TEMPLATE_URL
 tar -xzf ntemplate.tar.gz > /dev/null 2>&1
+
+ mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
+ cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
+       
+ IP=`hostname -i`
+ CPU=`cat /proc/cpuinfo |grep -c '^processor'`
+ replace REP_IP $IP -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
+ replace REP_CORES $CPU -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
 
  if [ ! -e /usr/local/cpanel ]
  then
@@ -313,10 +314,16 @@ InsertSection "Generate NGINX Vhosts Configuration files"
 echo -e " - Generate Nginx.conf file\t\t\t [ ${Green}Done${NC} ]"
    cd /var/cpanel/users
    fpmport=9000
-   for USER in *
+if [ ! -d $NGINX_PATH/vhosts/  ]
+   then
+	mkdir $NGINX_PATH/vhosts
+else
+   mv $NGINX_PATH/vhosts $NGINX_PATH/vhosts.$(date +%F)
+fi
+for USER in *
    do
 	for DOMAIN in `cat $USER | grep ^DNS | cut -d= -f2`
-	do
+	   do
 
 		IP=`cat $USER|grep ^IP|cut -d= -f2`;
 			ROOT_HOME=`grep ^$USER: /etc/passwd|cut -d: -f6`;
@@ -336,12 +343,6 @@ echo -e " - Generate Nginx.conf file\t\t\t [ ${Green}Done${NC} ]"
 
 			DOM_CONF=$NGINX_PATH/vhosts/$DOMAIN.conf
 		  	DOM_FPM_CONF=$FPM_PATH/conf.d/$DOMAIN.conf
-
-
-			if [ ! -d $NGINX_PATH/vhosts/  ]
-			then
-				mkdir $NGINX_PATH/vhosts
-			fi
 
       		  	cp -R -f $BASE/nginx_template/maintenance $HOME/
 	  		chown -R $USER.$USER $HOME/maintenance  > /dev/null 2>&1
@@ -420,6 +421,276 @@ echo -e " - Check /tmp/nginx_vh_list.tmp to View Full virtual host log"
  fi 
 }
 
+do_AddNew_Config()
+{
+
+
+rm -rf /usr/local/src/EasyNginx/
+mkdir -p /usr/local/src/EasyNginx/
+Vhosts_before=`ls $NGINX_PATH/vhosts/ |wc -l`
+# Calcultaing the memory size
+RAM_SIZE=`free -m | grep Mem | awk '{print $2}'`
+# Calcultaing the number of CPUs
+CPU=`cat /proc/cpuinfo |grep -c '^processor'`
+DCPU=`echo $CPU*2 |bc`
+# To get 2/3 of RAM
+RAM_use=`echo $RAM_SIZE*2/3 |bc`
+# To get The pm.max.childern as it equal = 2/3 of RAM divided of 50
+PAM_MAX=`echo $RAM_use/50 |bc`
+
+cd ${BASE}
+wget -q $CONF_TEMPLATE_URL
+tar -xzf ntemplate.tar.gz > /dev/null 2>&1
+
+InsertSection "Generate New NGINX Vhosts Configuration files"
+
+   cd /var/cpanel/users
+   fpmport=9100
+   for USER in *
+   do
+	for DOMAIN in `cat $USER | grep ^DNS | cut -d= -f2`
+	do
+
+		IP=`cat $USER|grep ^IP|cut -d= -f2`;
+			ROOT_HOME=`grep ^$USER: /etc/passwd|cut -d: -f6`;
+			IS_SUBDOM=`echo $DOMAIN|cut -d"." -f3`;
+			SUBDOM=`echo $DOMAIN|cut -d"." -f1`;
+			if [ "$IS_SUBDOM" = "com" ] || [ "$IS_SUBDOM" = "net" ] || [ "$IS_SUBDOM" = "org" ]
+			then
+				TXT="root   $ROOT_HOME/public_html/$SUBDOM; #$DOMAIN"
+			        HOME="$ROOT_HOME/public_html/$SUBDOM"
+			else
+				TXT="root   $ROOT_HOME/public_html; #$DOMAIN"
+				HOME="$ROOT_HOME/public_html"
+			fi
+
+			echo "[+] Converting $DOMAIN for $USER with $SUBDOM" >> /tmp/nginx_vh_list.tmp
+
+			DOM_CONF=$NGINX_PATH/vhosts/$DOMAIN.conf
+		  	DOM_FPM_CONF=$FPM_PATH/conf.d/$DOMAIN.conf
+
+
+			if [ "$fpm" == "1" ]
+			then
+
+		 	    if [ ! -e $DOM_CONF ] 
+				then
+			VHOST_TEMPLATE=`cat $BASE/nginx_template/nginx-phpfpm.conf.tpl`
+			FPM_SITE_TEMPLATE=`cat $BASE/nginx_template/fpm-site.tpl`
+
+
+cat > $DOM_CONF << EOF
+$VHOST_TEMPLATE
+EOF
+				replace REP_DOMAIN $DOMAIN -- $DOM_CONF > /dev/null 2>&1
+				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
+				replace REP_HOME "$HOME" -- $DOM_CONF > /dev/null 2>&1
+				replace REP_FPMPORT "$fpmport" -- $DOM_CONF > /dev/null 2>&1
+                                replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
+  			echo -e " - Generating $DOMAIN Configuration file\t\t [ ${Green}Done${NC} ]"
+
+			    fi
+
+			    if [ ! -e $DOM_FPM_CONF ] 
+				then
+cat > $DOM_FPM_CONF << EOF
+$FPM_SITE_TEMPLATE
+EOF
+				replace REP_MAX $PAM_MAX -- $DOM_FPM_CONF > /dev/null 2>&1
+				replace REP_CPU $CPU -- $DOM_FPM_CONF > /dev/null 2>&1
+				replace REP_DCPU $DCPU -- $DOM_FPM_CONF > /dev/null 2>&1
+				replace REP_DOMAIN $DOMAIN -- $DOM_FPM_CONF > /dev/null 2>&1
+				replace REP_FPMPORT $fpmport -- $DOM_FPM_CONF > /dev/null 2>&1
+			        replace REP_USER $USER 	-- $DOM_FPM_CONF > /dev/null >&1	                
+				fpmport=`echo $[1 + $fpmport]`
+			    fi	
+
+			elif [ "$fpm" == "0" ]
+			then
+			   if [ ! -e $DOM_CONF ] 
+			     then
+			
+			VHOST_TEMPLATE=`cat $BASE/nginx_template/nginx-reverse.conf.tpl`
+cat > $DOM_CONF << EOF
+$VHOST_TEMPLATE
+EOF
+				replace REP_DOMAIN $DOMAIN -- $DOM_CONF > /dev/null 2>&1
+				replace REP_Apache_Port $Apache_Port -- $DOM_CONF > /dev/null 2>&1
+				#replace REMOTE_IP $REMOTEIP -- $DOM_CONF > /dev/null 2>&1
+		                replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
+				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
+	                     echo -e " - Generating $DOMAIN Configuration file\t\t [ ${Green}Done${NC} ]"
+			   fi
+
+			fi
+		
+	done
+done
+
+Vhosts_After=`ls $NGINX_PATH/vhosts/ |wc -l`
+echo -e " - Nginx Virtual Hosts Configuration Check\t\t [ ${Green}Done${NC} ]"
+  if [ $Vhosts_before == $Vhosts_After ]
+     then
+	echo -e " - There is no new Domian Added\t\t\t\t [ ${Green}Done${NC} ]"
+  else
+	New_Added=`echo $Vhosts_After-$Vhosts_before |bc`
+	echo -e " - Adding $New_Added new Domian\t\t\t\t\t [ ${Green}Done${NC} ]"
+  fi
+
+#Fix Domain ROOT_HOME Path
+cd /var/cpanel/users
+for USER in *
+do
+	for DOMAIN in `cat $USER | grep ^DNS= | cut -d= -f2`
+	do
+		SUBDOM=`echo $DOMAIN|cut -d"." -f1`;
+		TXT="/$SUBDOM;"
+		DOM_CONF=/usr/local/nginx/vhosts/$DOMAIN.conf
+		replace $TXT REPLACE_VAR -- $DOM_CONF > /dev/null 2>&1
+		replace "REPLACE_VAR" ";" -- $DOM_CONF > /dev/null 2>&1 
+       
+	done
+done
+
+
+vhostc=`ls /usr/local/nginx/vhosts/*.conf | wc -l`
+echo -e " - Current Virtual hosts Configuration\t\t\t [ ${vhostc} Account include SubDomains ]"
+echo -e " - Check /tmp/nginx_vh_list.tmp to View Full virtual host log"
+
+}
+
+do_LogRotate ()
+{
+if [ ! -e /usr/local/nginx  ]
+  then
+
+echo "NGINX NOT INSTALLED IN SERVER"
+        
+else
+
+sed -i 's@weekly@daily@' /etc/logrotate.conf
+sed -i 's@rotate 4@rotate 1@' /etc/logrotate.conf
+
+echo "/usr/local/nginx/on {
+    missingok
+    notifempty
+    sharedscripts
+    maxage 2
+    size 1k
+    postrotate
+	service nginx restart
+    endscript
+}
+
+
+
+/usr/local/nginx/logs/* {
+    missingok
+    notifempty
+    sharedscripts
+    maxage 2
+    size 1k
+    postrotate
+      service nginx restart
+    endscript
+}
+" >/etc/logrotate.d/nginx
+logrotate -v /etc/logrotate.conf /etc/logrotate.d/nginx
+
+fi 
+}
+
+do_AddHooks ()
+{
+if [ $fpm="1" ]
+then
+cat > /usr/local/cpanel/scripts/postwwwacctuser << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -fpm -nc", shell=True)
+EOF
+
+elif [ $fpm="0" ]
+then
+
+cat > /usr/local/cpanel/scripts/postwwwacctuser << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -r -nc", shell=True)
+EOF
+
+fi
+
+cat > /scripts/before_apache_make << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -drpaf", shell=True)
+EOF
+
+cat > /scripts/after_apache_make_install << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -rpaf", shell=True)
+EOF
+
+cat > /scripts/postkillacct << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -rc", shell=True)
+EOF
+
+}
+
+do_DisableRPAF ()
+{
+replace "LoadModule" "#LoadModule" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+replace "Mod_rpaf" "#Mod_rpaf" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+replace "RPAF" "#RPAF" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+}
+
+do_EnableRPAF ()
+{
+replace "#LoadModule" "LoadModule" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+replace "#Mod_rpaf" "Mod_rpaf" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+replace "#Mod_rpaf" "Mod_rpaf" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+replace "#RPAF" "RPAF" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+/etc/init.d/httpd restart
+/etc/init.d/httpd restart
+}
+
+do_RemoveVH ()
+{
+cat /etc/userdomains | grep -v no |cut -d: -f1 | sort > Ndomains.txt
+ls /usr/local/nginx/vhosts/ | sed 's/.conf//g' | sort > Nvhosts.txt
+Rvhost=`diff Ndomains.txt Nvhosts.txt | grep "> " | cut -d">" -f2 |cut -d" " -f2`
+rm /usr/local/nginx/vhosts/$Rvhost.conf
+}
+
+do_Help()
+{
+		echo "        ####################### "
+ 		echo "        ##		     ## "
+ 		echo "        # ${Red}[EasyNginx.sh v3.0]${NC} # "
+ 		echo "        ##		     ## "
+ 		echo "        ####################### "
+                echo "${Blue}This Script was developed by ArabHosters${NC}"
+                echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
+                echo "Usage : $0 -[fpm|r] [-fpm -c | -r -c] "
+ 		echo " ${Yellow}Option            Meaning:${NC}"
+		echo " ${Yellow}------            --------${NC}"
+                echo " ${LightGreen}-fpm${NC}		   ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
+		echo " ${LightGreen}-r${NC}		   ${LightBlue}Installing Nginx as a reverse proxy${NC}"
+		echo " ${LightGreen}-rpaf${NC}		   ${LightBlue}Installing Installing Rpaf module${NC}"
+		echo " ${LightGreen}-drpaf${NC}		   ${LightBlue}Installing Disable Rpaf module${NC}"
+		echo " ${LightGreen}-fpm -c${NC}           ${LightBlue}Making VHosts when Nginx is standing alone (without Installing Nginx)${NC}"
+		echo " ${LightGreen}-r -c${NC}		   ${LightBlue}Making VHosts when Nginx is reverse proxy  (without Installing Nginx)${NC}"
+		echo " ${LightGreen}-fpm -nc${NC}	   ${LightBlue}Adding VHosts for new domains when Nginx is standing alone${NC}"
+		echo " ${LightGreen}-r -nc${NC}	           ${LightBlue}Adding VHosts for new domains when Nginx is reverse proxy${NC}"
+		echo " ${LightGreen}-logr${NC}	           ${LightBlue}Adding if you have nginx and want to rotate logs${NC}"
+                echo ""
+}
+
+
 #####################
 ##		   ##
 # The Main Function #
@@ -436,67 +707,74 @@ if [ $# != "0" ]
   
 	   if [ $1 == "-fpm" ]
 	   then
-		fpm="1"
+		  fpm="1"
 		  if [ $2 == "-c" ]
 		  then 
-			doConfig
-		        do_phpfpmHandelNginx
-	          else
+			do_Config
+		        do_CheckServices
+	          elif [ $2 == "-nc" ]
+		  then
+			do_AddNew_Config
+			do_CheckServices
+		  elif [ $# == "1" ]
+		  then
 			do_Nginx
 			do_phpfpm 
-			doConfig
-			do_phpfpmHandelNginx
+			do_Config
+  			if [ -e /usr/local/cpanel ]
+			then
+			do_AddHooks
+			fi 
+			do_CheckServices
+		  else
+			do_Help
  		 fi
     	  elif [ $1 == "-r" ]
 	  then
 	         fpm="0"
 		 if [ $2 == "-c" ]
 	         then 
-			doRpaf
-			doConfig
-		        do_phpfpmHandelNginx
-		 else
+			do_Rpaf
+			do_Config
+		        do_CheckServices
+		 elif [ $2 == "-nc" ]
+		 then 
+			do_AddNew_Config
+			do_CheckServices
+	         elif [ $# == "1" ]
+		 then
 			do_Nginx
-			doRpaf
-			doConfig
-			do_phpfpmHandelNginx
+			do_Rpaf
+			do_Config
+		        if [ -e /usr/local/cpanel ]
+			then
+			do_AddHooks
+			fi 
+			do_CheckServices
+	  
+		 else
+			do_Help
  		 fi
+	  elif [ $1 == "-drpaf" ]
+	  then
+		do_DisableRPAF 
+	  elif [ $1 == "-rpaf" ]
+	  then
+		do_Rpaf
+		do_EnableRPAF
+	  elif [ $1 == "-logr" ]
+	  then
+		do_LogRotate
+	  elif [ $1 == "-rc" ]
+	  then
+		do_RemoveVH
       	  else 
- 		echo "        ####################### "
- 		echo "        ##		     ## "
- 		echo "        # ${Red}[EasyNginx.sh v3.0]${NC} # "
- 		echo "        ##		     ## "
- 		echo "        ####################### "
-                echo "${Blue}This Script was developed by ArabHosters${NC}"
-                echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
-                echo "Usage : $0 -[fpm|r] [-fpm -c | -r -c] "
- 		echo " ${Yellow}Option            Meaning:${NC}"
-		echo " ${Yellow}------            --------${NC}"
-                echo " ${LightGreen}-fpm${NC}		   ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
-		echo " ${LightGreen}-r${NC}		   ${LightBlue}Installing Nginx as a reverse proxy${NC}"
-		echo " ${LightGreen}-fpm -c${NC}           ${LightBlue}Making VHosts when Nginx is standing alone (without Installing Nginx)${NC}"
-		echo " ${LightGreen}-r -c${NC}		   ${LightBlue}Making VHosts when Nginx is reverse proxy  (without Installing Nginx)${NC}"
-                echo ""
-         fi 
+ 		do_Help
+          fi 
      
        )
 else 
-	echo "        ####################### "
- 	echo "        ##		     ## "
- 	echo "        # ${Red}[EasyNginx.sh v3.0]${NC} # "
-	echo "        ##		     ## "
- 	echo "        ####################### "
-        echo "${Blue}This Script was developed by ArabHosters${NC}"
-        echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
-        echo "Usage : $0 -[fpm|r] [-fpm -c | -r -c] "
- 	echo " ${Yellow}Option            Meaning:${NC}"
-	echo " ${Yellow}------            --------${NC}"
-        echo " ${LightGreen}-fpm${NC}		   ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
-	echo " ${LightGreen}-r${NC}		   ${LightBlue}Installing Nginx as a reverse proxy${NC}"
-	echo " ${LightGreen}-fpm -c${NC}           ${LightBlue}Making VHosts when Nginx is standing alone (without Installing Nginx)${NC}"
-	echo " ${LightGreen}-r -c${NC}		   ${LightBlue}Making VHosts when Nginx is reverse proxy  (without Installing Nginx)${NC}"
-        echo ""
-
+	do_Help
 fi
 
 

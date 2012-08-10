@@ -9,12 +9,12 @@ server {
    location ~.*\.(3gp|gif|jpg|jpeg|png|ico|wmv|avi|asf|asx|mpg|mpeg|mp4|pls|mp3|mid|wav|swf|flv)$ {
    expires 1y;   
 	}
-   location ~* ^.+.(jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2|doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js)$ {
-             proxy_cache_valid 200 301 302 120m;
-             expires 2d;
-             proxy_pass http://REP_IP;
-             proxy_cache one;
-        }
+   #location ~* ^.+.(jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2|doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js)$ {
+   #          proxy_cache_valid 200 301 302 120m;
+   #          expires 2d;
+   #          proxy_pass http://REP_IP;
+   #          proxy_cache one;
+   #     }
 
    location / {
   	client_max_body_size    10m;
@@ -39,12 +39,12 @@ server {
    	proxy_set_header   X-Real-IP  $remote_addr;
    	proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
 
-        proxy_cache               one;
-        proxy_cache_key         backend$request_uri;
-        proxy_cache_valid       200 301 302 20m;
-        proxy_cache_valid       404 1m;
-        proxy_cache_valid       any 15m;
-        proxy_cache_use_stale   error timeout invalid_header updating;
+      #  proxy_cache               one;
+      #  proxy_cache_key         backend$request_uri;
+      #  proxy_cache_valid       200 301 302 20m;
+      #  proxy_cache_valid       404 1m;
+      #  proxy_cache_valid       any 15m;
+      #  proxy_cache_use_stale   error timeout invalid_header updating;
   }
 
    
