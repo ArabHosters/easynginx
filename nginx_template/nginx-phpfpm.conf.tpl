@@ -51,11 +51,9 @@ server {
 		    if (!-e $request_filename) {
 			rewrite . /index.php last;
 		                               }
-	
   location ~ /\.ht {
         	deny  all;
                	 }
-
 
      ## All other errors get the generic error page
 
@@ -66,8 +64,6 @@ server {
    location  /maintenance/error_page.html {
 
           internal;
-
                                              }
-
 }
 
