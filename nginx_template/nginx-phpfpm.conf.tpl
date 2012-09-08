@@ -1,3 +1,8 @@
+## Copyright (c) 2012, Fixed Solutions, System Development All rights reserved.
+## Script : EasyNginx v3.3.1
+## Author : [Ahmed Kandil] <a.kandil@arabhosters>
+## Last Update : [ 08-09-2012 ]
+
 server {
   REP_TXT
   access_log logs/REP_DOMAIN-access_log;

@@ -1,4 +1,9 @@
- server {
+## Copyright (c) 2012, Fixed Solutions, System Development All rights reserved.
+## Script : EasyNginx v3.3.1
+## Author : [Ahmed Kandil] <a.kandil@arabhosters>
+## Last Update : [ 08-09-2012 ]
+
+server {
         root   /usr/local/nginx/html;
         listen       80;
         server_name  localhost;

@@ -1,0 +1,9 @@
+%product Easynginx Script
+%copyright 2011-2012 by Ahmed kandeel, All Rights Reserved.
+%vendor Arabhosters Industries
+%license COPYING
+%readme README
+%description this script is used for building LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts
+%version 3.3.1 1020304
+f 775 root root /usr/local/bin/easynginx /root/easynginx
+

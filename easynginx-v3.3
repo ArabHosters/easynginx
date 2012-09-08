@@ -1,8 +1,8 @@
 #!/bin/bash
-# Script : easynginx
+# Script : EasyNginx
 # Version: 3.3.1
 # Coder  : Ahmed Kandil .. continual with Ahmed Tohamy, Mahmoud Ahmed
-# Last Update : 28-08-2012
+# Last Update : 8-09-2012
 
 
 # Set of Variables :
@@ -805,6 +805,7 @@ chmod +x /usr/local/cpanel/hooks/subdomain/delsubdomain
 chmod +x /usr/local/cpanel/hooks/addondomain/deladdondomain
 chmod +x /usr/local/cpanel/hooks/park/unpark
 
+/usr/local/cpanel/bin/register_hooks > /dev/null 2>&1
 }
 
 do_DisableRPAF ()
@@ -826,46 +827,52 @@ replace "#RPAF" "RPAF" -- /usr/local/apache/conf/includes/pre_main_global.conf >
 
 do_RemoveVH ()
 {
+echo -e " - Generating the name(s) of deleted Account(s)\t\t [ ${Green}Done${NC} ]"
+cd /usr/
 cat /etc/userdomains | grep -v nobody |cut -d: -f1 | sort > Ndomains.txt
 ls $NGINX_PATH/vhosts/ | sed 's/.conf//g' | sort > Nvhosts.txt
 diff Ndomains.txt Nvhosts.txt | grep "> " | cut -d">" -f2 |cut -d" " -f2 > Rvhost
+
 for i in `cat Rvhost`
 do
 rm $NGINX_PATH/vhosts/$i.conf
 rm $FPM_PATH/conf.d/$i.conf > /dev/null 2>&1
+echo -e " - Delete the configuration file for $i\t\t [ ${Green}Done${NC} ]"
 done
+
+rm -f Nvhosts.txt Ndomains.txt Rvhost > /dev/null 2>&1
+cd ~
 }
 
 do_Help()
 {
-		echo "        ####################### "
- 		echo "        ##		     ## "
- 		echo "        # ${Red}[EasyNginx.sh v3.0]${NC} # "
- 		echo "        ##		     ## "
- 		echo "        ####################### "
-                echo "${Blue}This Script was developed by ArabHosters${NC}"
-                echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
-                echo "Usage : $0 -[fpm|r] [-fpm -c | -r -c] "
+
+		echo " "
+ 		echo "${Red}[EasyNginx.sh v3.3.1]${NC}"
+        echo "${Blue}This Script was developed by ArabHosters${NC}"
+        echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
+        echo "Usage : $0 [options] "
  		echo " ${Yellow}Option            Meaning:${NC}"
 		echo " ${Yellow}------            --------${NC}"
-                echo " ${LightGreen}-fpm${NC}		   ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
+        echo " ${LightGreen}-fpm${NC}		   ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
 		echo " ${LightGreen}-r${NC}		   ${LightBlue}Installing Nginx as a reverse proxy${NC}"
 		echo " ${LightGreen}-rr${NC}	           ${LightBlue}Installing Nginx as a reverse proxy For a remote server${NC}"
 		echo " ${LightGreen}-fpm -c${NC}           ${LightBlue}Making VHosts when Nginx is standing alone (without Installing Nginx)${NC}"
 		echo " ${LightGreen}-r -c${NC}		   ${LightBlue}Making VHosts when Nginx is reverse proxy  (without Installing Nginx)${NC}"
 		echo " ${LightGreen}-fpm -nc${NC}	   ${LightBlue}Adding VHosts for new domains when Nginx is standing alone${NC}"
 		echo " ${LightGreen}-r -nc${NC}	           ${LightBlue}Adding VHosts for new domains when Nginx is reverse proxy${NC}"
-		echo " ${LightGreen}-rpaf${NC}		   ${LightBlue}Installing Installing Rpaf module${NC}"
-		echo " ${LightGreen}-drpaf${NC}		   ${LightBlue}Installing Disable Rpaf module${NC}"
+		echo " ${LightGreen}-rc${NC}	          ${LightBlue} Removing VHosts for Terminated Accounts${NC}"
+		echo " ${LightGreen}-rpaf${NC}		   ${LightBlue}Installing Rpaf module${NC}"
+		echo " ${LightGreen}-drpaf${NC}		   ${LightBlue}Disable Rpaf module${NC}"
 		echo " ${LightGreen}-logr${NC}	           ${LightBlue}If you have nginx and want to rotate logs${NC}"
-                echo ""
+        echo ""
 }
 
 
 #####################
-##		   ##
+##		           ##
 # The Main Function #
-##		   ##
+##		           ##
 #####################
 
 if [ $# != "0" ]
@@ -906,6 +913,7 @@ if [ $# != "0" ]
 			then
 			do_AddHooks
 			fi 
+			do_LogRotate
 			do_CheckServices
 		  
  	  	fi
@@ -939,6 +947,7 @@ if [ $# != "0" ]
 			then
 			do_AddHooks
 			fi 
+			do_LogRotate
 			do_CheckServices
 	  
  	       fi
@@ -963,27 +972,27 @@ if [ $# != "0" ]
 		do_RemoveVH
 	  elif [ $1 == "-rr" ]
 	  then
-	       if [ $# == "2" ]
-	       then
+	     if [ $# == "2" ]
+	     then
 	         REMOTEIP=$2
-		 fpm="0"
-	         if [ ! -e /usr/local/nginx ]
-		 then
-		    do_Nginx
-		 fi
-		    do_RemoteConfig
-		    do_CheckServices
-	       else
+		 	 fpm="0"
+	     	 if [ ! -e /usr/local/nginx ]
+		 	 then
+		    	do_Nginx
+		 	 fi
+		     do_RemoteConfig
+		     do_CheckServices
+	    else
 		  echo "${Red}Error, you didn't enter the IP for the remote server${NC}"
 		  echo ""
 		  echo ""
 		  do_Help
-	       fi
-      	  else 
+	    fi
+     else 
  		do_Help
-          fi 
+     fi 
      
-       )
+      )
 else 
 	do_Help
 fi

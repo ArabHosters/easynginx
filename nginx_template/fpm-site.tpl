@@ -1,3 +1,8 @@
+## Copyright (c) 2012, Fixed Solutions, System Development All rights reserved.
+## Script : EasyNginx v3.3.1
+## Author : [Ahmed Kandil] <a.kandil@arabhosters>
+## Last Update : [ 08-09-2012 ]
+
 [REP_DOMAIN]
 listen = 127.0.0.1:REP_FPMPORT
 user = REP_USER
@@ -21,3 +26,6 @@ env[HOSTNAME] = $HOSTNAME
 env[TMP] = /tmp
 env[TMPDIR] = /tmp
 env[TEMP] = /tmp
+php_flag[display_errors] = on
+php_admin_value[error_log] = /usr/local/php-fpm/var/log/error-REP_DOMAIN.log
+php_admin_flag[log_errors] = on
