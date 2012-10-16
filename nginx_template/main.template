@@ -1,7 +1,7 @@
 ## Copyright (c) 2012, Fixed Solutions, System Development All rights reserved.
-## Script : EasyNginx v3.3.1
+## Script : EasyNginx v3.3.4
 ## Author : [Ahmed Kandil] <a.kandil@arabhosters.com>
-## Last Update : [ 08-09-2012 ]
+## Last Update : [ 16-10-2012 ]
 
 user  nobody;
 worker_processes  REP_CORES;
@@ -20,21 +20,22 @@ http   {
 	set_real_ip_from     REP_IP;
 	include    mime.types;
 	default_type  application/octet-stream;
-	
+#Symlink disabled for security reasons ( bypass between users )
+ 	disable_symlinks on;
 	sendfile on;
 	tcp_nopush on;
 	tcp_nodelay on;
 
 	keepalive_timeout  10;
 
-        gzip on;
-        gzip_disable "msie6";
-        gzip_vary on;
-        gzip_proxied any;
-        gzip_comp_level 5;
-        gzip_buffers 64 8k;
-        gzip_min_length 1024; gzip_http_version 1.1;
-        gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip on;
+    gzip_disable "msie6";
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 5;
+    gzip_buffers 64 8k;
+    gzip_min_length 1024; gzip_http_version 1.1;
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
 
 	ignore_invalid_headers on;
 	
@@ -42,7 +43,7 @@ http   {
 	client_max_body_size 20m;
 	client_header_timeout  3m;
 	client_body_timeout 3m;
-        client_header_buffer_size 4k;
+    client_header_buffer_size 4k;
 
 	send_timeout     3m;
 	connection_pool_size  256;
@@ -53,12 +54,12 @@ http   {
 	fastcgi_buffers 2048 4k;
 
   	proxy_buffering on;
-    	proxy_cache_path /usr/local/nginx/proxy levels=1:2 keys_zone=one:15m inactive=7d max_size=1000m;
-    	proxy_buffer_size 4k;
-    	proxy_buffers 100 8k;
-    	proxy_connect_timeout      60;
-    	proxy_send_timeout         60;
-    	proxy_read_timeout         60;
+    proxy_cache_path /usr/local/nginx/proxy levels=1:2 keys_zone=one:15m inactive=7d max_size=1000m;
+    proxy_buffer_size 4k;
+    proxy_buffers 100 8k;
+    proxy_connect_timeout      60;
+    proxy_send_timeout         60;
+    proxy_read_timeout         60;
 
 	include   /usr/local/nginx/vhosts/*.conf;
 

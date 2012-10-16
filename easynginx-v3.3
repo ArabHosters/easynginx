@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script : EasyNginx
-# Version: 3.3.3
+# Version: 3.3.4
 # Coder  : Ahmed Kandil .. continual with Ahmed Tohamy, Mahmoud Ahmed
 # Last Update : 11-09-2012
 
@@ -168,6 +168,7 @@ elif [ "$fpm" == "0" ]
 		 replace ":80" ":$Apache_Port" -- /usr/local/apache/conf/httpd.conf > /dev/null 2>&1
      	 replace "apache_port=0.0.0.0:80" "apache_port=0.0.0.0:$Apache_Port" -- /var/cpanel/cpanel.config > /dev/null 2>&1
     	 echo -e " - Updated Apache Port on Tweak Setting  \t\t [ ${Green}Done${NC} ]"
+    	 /usr/local/cpanel/bin/apache_conf_distiller --update > /dev/null 2>&1
        	 /scripts/rebuildhttpdconf > /dev/null 2>&1
          sleep 1
 		 echo -e " - Apache Config Rebuild  \t\t\t         [ ${Green}Done${NC} ]"
@@ -241,6 +242,7 @@ else
 	RPAF_IP_OK=`grep RPAFproxy_ips  /usr/local/apache/conf/includes/pre_main_global.conf|wc -l`
 	if [ $RPAF_IP_OK = 0 ]
 	then
+		MAINIP=`hostname -i`
 		echo "RPAFproxy_ips 127.0.0.1 $MAINIP" >> /usr/local/apache/conf/includes/pre_main_global.conf
 		echo "RPAFsethostname On" >> /usr/local/apache/conf/includes/pre_main_global.conf
 	elif [ $RPAF_IP_OK > 1 ]
@@ -684,8 +686,8 @@ echo "/usr/local/nginx/on {
       service nginx restart
     endscript
 }
-" >/etc/logrotate.d/nginx
-logrotate -v /etc/logrotate.conf /etc/logrotate.d/nginx
+" > /etc/logrotate.d/nginx
+logrotate -v /etc/logrotate.conf /etc/logrotate.d/nginx > /dev/null 2>&1
 
 fi 
 
@@ -812,9 +814,11 @@ replace "RPAF" "#RPAF" -- /usr/local/apache/conf/includes/pre_main_global.conf >
 
 do_EnableRPAF ()
 {
+IP=`hostname -i`
 replace "#LoadModule" "LoadModule" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
 #replace "#Mod_rpaf" "Mod_rpaf" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
 replace "#RPAF" "RPAF" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
+replace "127.0.0.1" "127.0.0.1 $IP" -- /usr/local/apache/conf/includes/pre_main_global.conf > /dev/null 2>&1
 /etc/init.d/httpd restart
 /etc/init.d/httpd restart
 }
@@ -842,7 +846,7 @@ do_Help()
 {
 
 		echo " "
- 		echo "${Red}[EasyNginx.sh v3.3.3]${NC}"
+ 		echo "${Red}[EasyNginx.sh v3.3.4]${NC}"
         echo "${Blue}Copyright (c) 2012, Fixed Solutions All rights reserved.${NC}"
         echo " "
         echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
@@ -926,6 +930,7 @@ if [ $# != "0" ]
 				then
 					do_AddHooks
 				fi
+				do_tweak
 		        do_CheckServices
 			elif [ $2 == "-nc" ]
 			then 
@@ -978,6 +983,7 @@ if [ $# != "0" ]
 		    	do_Nginx
 		 	fi
 		     do_RemoteConfig
+		     do_tweak
 		     do_CheckServices
 	    else
 		  echo "${Red}Error, you didn't enter the IP for the remote server${NC}"
