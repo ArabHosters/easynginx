@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script : easynginx
-# Version: 3.3
-# Coder  : Ahmed Kandil .. continual with Ahmed Tohamy, Mahmoud Ahmed
+# Version: 3.4
+# Coder  : Ahmed Kandil .. continual with Ahmed Tohamy, Mahmoud Ahmed, Ahmed Kamel
 # Last Update : 11-08-2012
 
 
@@ -103,9 +103,9 @@ do_Nginx()
  yum install bc -y
 
  cd /usr/local/
- wget http://nginx.org/download/nginx-1.2.0.tar.gz
- tar zxvf nginx-1.2.0.tar.gz
- cd nginx-1.2.0
+ wget http://nginx.org/download/nginx-1.2.8.tar.gz
+ tar zxvf nginx-1.2.8.tar.gz
+ cd nginx-1.2.8
  ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module 
  make
  make install 
@@ -127,10 +127,11 @@ do_phpfpm()
 
    yum install libxml2-devel bzip2-devel libjpeg-devel libX11-devel gd-devel libmcrypt-devel mysql-devel mhash-devel libevent-devel libtool-ltdl-devel curl-devel.x86_64 libc-client-devel.i386 libc-client-devel.i386 zlib-devel libpng-devel libxslt-devel -y
    yum install bzip2-devel.x86_64 -y
+   yum install freetype-devel gmp-devel mhash-devel libcurl-devel
    cd /usr/local/src
-   wget http://autosetup1.googlecode.com/files/php-5.3.10.tar.gz
-   tar -xzvf php-5.3.10.tar.gz && cd php-5.3.10
-  ./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv  --enable-fpm --enable-mbstring --with-mysqli --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib
+   wget http://www.php.net/get/php-5.3.23.tar.gz/from/us1.php.net/mirror
+   tar -xzvf php-5.3.23.tar.gz && cd php-5.3.23
+   ./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mhash
   
    make all
    make install
