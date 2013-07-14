@@ -62,12 +62,10 @@ ver=`uname -a | cut -d" " -f12`
     	     if [ $ver == "x86_64" ]
              then (
 		   		 rpm -Uvh http://mirror.de.leaseweb.net/epel/5/x86_64/epel-release-5-4.noarch.rpm
-                 rpm -Uvh http://centos.alt.ru/repository/centos/5/x86_64/centalt-release-5-3.noarch.rpm
  			      )
  
 	         else
 	    		rpm -Uvh http://download.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm	
-  	    		rpm -Uvh http://centos.alt.ru/repository/centos/5/i386/centalt-release-5-3.noarch.rpm
 	         fi
 		     )
 	    elif [ $rel == "6" ]
@@ -76,11 +74,9 @@ ver=`uname -a | cut -d" " -f12`
 		     if [ $ver == "x86_64" ]
  			 then (
 		         rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
-				 rpm -Uvh http://centos.alt.ru/repository/centos/6/x86_64/centalt-release-6-1.noarch.rpm  
  			     )
 	         else
 				 rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-7.noarch.rpm
-				 rpm -Uvh http://centos.alt.ru/repository/centos/6/i386/centalt-release-6-1.noarch.rpm  
 	         fi
 		     )
 	    else
@@ -104,10 +100,10 @@ do_Nginx()
  yum install bc -y
 
  cd /usr/local/
- wget http://nginx.org/download/nginx-1.2.8.tar.gz
- tar zxvf nginx-1.2.8.tar.gz
- cd nginx-1.2.8
- ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module 
+ wget http://nginx.org/download/nginx-1.4.1.tar.gz
+ tar zxvf nginx-1.4.1.tar.gz
+ cd nginx-1.4.1
+ ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_ssl_module 
  make
  make install 
 

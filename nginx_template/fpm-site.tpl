@@ -1,7 +1,7 @@
-## Copyright (c) 2012, Fixed Solutions, System Development All rights reserved.
-## Script : EasyNginx v3.3.1
-## Author : [Ahmed Kandil] <a.kandil@arabhosters.com>
-## Last Update : [ 08-09-2012 ]
+; Copyright (c) 2012, Fixed Solutions, System Development All rights reserved.
+; Script : EasyNginx v3.3.1
+; Author : [Ahmed Kandil] <a.kandil@arabhosters.com>
+; Last Update : [ 08-09-2012 ]
 
 [REP_DOMAIN]
 listen = 127.0.0.1:REP_FPMPORT
