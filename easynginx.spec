@@ -26,7 +26,6 @@ echo "Installing easynginx ......."
 
 %preun
 
-rm -rf /usr/local/bin/easynginx
 
 
 %install
