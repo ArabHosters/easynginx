@@ -1,7 +1,7 @@
 Summary: easynginx [Arabhosters Development Team]
 Name: easynginx
 Version: 3.4.1
-Release: 1
+Release: 3
 Group: ArabHosters
 Vendor: ArabHosters
 License: GPL
