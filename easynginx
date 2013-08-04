@@ -73,10 +73,10 @@ ver=`uname -a | cut -d" " -f12`
 
 		     if [ $ver == "x86_64" ]
  			 then (
-		         rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
+		         rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
  			     )
 	         else
-				 rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-7.noarch.rpm
+				 rpm -Uvh https://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 	         fi
 		     )
 	    else
@@ -98,11 +98,21 @@ do_Nginx()
  yum install gcc* -y
  yum install pcre-devel* -y
  yum install bc -y
+ yum install curl curl-devel.x86_64 -y
 
- cd /usr/local/
- wget http://nginx.org/download/nginx-1.4.1.tar.gz
- tar zxvf nginx-1.4.1.tar.gz
- cd nginx-1.4.1
+ cd /usr/local/src
+# wget http://nginx.org/download/nginx-1.4.1.tar.gz
+# tar zxvf nginx-1.4.1.tar.gz
+# cd nginx-1.4.1
+rm -rf nginx*
+
+#install the latest version of nginx
+latest_url=`curl http://wiki.nginx.org/Install |grep 'Stable.*' -A2 |grep -o 'http://.*nginx.*\.gz'`
+latest_version=`curl http://wiki.nginx.org/Install |grep 'Stable.*' -A2 |grep -o 'http://.*nginx.*\.gz' |awk -F'/' '{print$5}' |sed 's/.tar.gz//g'`
+wget $latest_url
+tar xvfz ${latest_version}.tar.gz
+cd ${latest_version}
+
  ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_ssl_module 
  make
  make install 
@@ -126,8 +136,17 @@ do_phpfpm()
    yum install bzip2-devel.x86_64 -y
    yum install freetype-devel gmp-devel mhash-devel libcurl-devel
    cd /usr/local/src
-   wget http://www.php.net/get/php-5.3.23.tar.gz/from/us1.php.net/mirror
-   tar -xzvf php-5.3.23.tar.gz && cd php-5.3.23
+#   wget http://www.php.net/get/php-5.3.23.tar.gz/from/us1.php.net/mirror
+#   tar -xzvf php-5.3.23.tar.gz && cd php-5.3.23
+rm -rf php*
+
+#download the latest version of php
+php_package=`curl http://www.php.net/downloads.php#v5 |grep 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz'`
+php_version=`curl http://www.php.net/downloads.php#v5 |grep 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz' |sed 's/.tar.gz//g'`
+php_url=http://www.php.net/get/$php_package/from/us1.php.net/mirror
+wget $php_url
+tar xvfz $php_package && cd $php_version
+
    ./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mhash
   
    make all
@@ -147,7 +166,12 @@ do_phpfpm()
    chmod +x /etc/init.d/php-fpm
    chkconfig --add php-fpm
    chkconfig --levels 235 php-fpm on
-   rm -rf /usr/local/src/php-5.3.23
+#convert php paths to php-fpm paths
+mv /usr/bin/php /usr/bin/php2
+mv /usr/local/bin/php /usr/local/bin/php2
+ln -s /usr/local/php-fpm/sbin/php-fpm /usr/local/bin/php
+ln -s /usr/local/php-fpm/sbin/php-fpm /usr/bin/php
+
    echo -e " -- PHP Installed\t\t\t [ ${Green}Done${NC} ] "
 }
 
@@ -192,8 +216,9 @@ if [ "$fpm" == "1" ]
 elif [ "$fpm" == "0" ]
  then      
       /etc/init.d/php-fpm stop > /dev/null 2>&1
-      /etc/init.d/httpd restart
-	  /etc/init.d/httpd restart
+     # /etc/init.d/httpd restart
+	killall -9 httpd &>/dev/null
+        /etc/init.d/httpd start
 	  /etc/init.d/nginx start
 	  /etc/init.d/nginx restart		
 fi
@@ -280,9 +305,43 @@ IP=`hostname -i`
 CPU=`cat /proc/cpuinfo |grep -c '^processor'`
 replace REP_IP $IP -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
 replace REP_CORES $CPU -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
+#####################################################################################
+#check for varnish
+if [ -e /var/run/varnish.pid ]
+then
+        echo
+        echo -e " ${Red}- Varnish cache is active${NC} \t\t\t\t [ ${Green}Done${NC} ]"
+        backend_oldip=`grep "backend default" /etc/varnish/default.vcl -A3 |grep host`
+        backend_oldport=`grep "backend default" /etc/varnish/default.vcl -A3 |grep port`
+
+        backend_newip='.host = "127.0.0.1";'
+        backend_newport='.port = "81";'
+
+        REP_NGINXPORT='127.0.0.1:81'
+
+        frontend_oldip=`grep DAEMON_OPTS /etc/sysconfig/varnish |grep -v "#" |awk '{print$2}'`
+        frontend_newip=':80'
+
+        replace "$backend_oldip" "$backend_newip" -- /etc/varnish/default.vcl &>/dev/null
+        replace "$backend_oldport" "$backend_newport" -- /etc/varnish/default.vcl &>/dev/null
+        replace "$frontend_oldip" "$frontend_newip" -- /etc/sysconfig/varnish &>/dev/null
+
+        /etc/init.d/varnish stop
+        /etc/init.d/nginx stop &>/dev/null
+        /etc/init.d/httpd stop &>/dev/null
+        /etc/init.d/varnish start
+else
+        REP_NGINXPORT=80
+fi
+####################################################################################
 
 if [ ! -e /usr/local/cpanel ]
  then
+	if [ ! -e /usr/local/nginx/vhosts ]
+        then
+                mkdir /usr/local/nginx/vhosts
+        fi
+
 	InsertSection "Generating NGINX Configuration files"
 	echo -e " - Generate Nginx.conf file\t\t\t\t [ ${Green}Done${NC} ]"
   	
@@ -305,6 +364,7 @@ EOF
 		IP=`hostname -i`
     	replace REP_IP $IP -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1
         replace REP_Apache_Port $Apache_Port -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1
+	replace REP_NGINXPORT $REP_NGINXPORT -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1	
     fi
   
 else
@@ -366,7 +426,7 @@ EOF
 				replace REP_HOME "$HOME" -- $DOM_CONF > /dev/null 2>&1
 				replace REP_FPMPORT "$fpmport" -- $DOM_CONF > /dev/null 2>&1
                 replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
-
+				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1
 
 cat > $DOM_FPM_CONF << EOF
 $FPM_SITE_TEMPLATE
@@ -389,7 +449,7 @@ EOF
 				replace REP_Apache_Port $Apache_Port -- $DOM_CONF > /dev/null 2>&1
 		        replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
 				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
-
+				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1
 			fi
 	done
 done
@@ -434,6 +494,37 @@ DCPU=`echo $CPU*2 |bc`
 RAM_use=`echo $RAM_SIZE*2/3 |bc`
 # To get The pm.max.childern as it equal = 2/3 of RAM divided of 50
 PAM_MAX=`echo $RAM_use/50 |bc`
+#####################################################################################
+#check for varnish
+if [ -e /var/run/varnish.pid ]
+then
+        echo
+        echo -e " ${Red}- Varnish cache is active${NC} \t\t\t\t [ ${Green}Done${NC} ]"
+        backend_oldip=`grep "backend default" /etc/varnish/default.vcl -A3 |grep host`
+        backend_oldport=`grep "backend default" /etc/varnish/default.vcl -A3 |grep port`
+
+        backend_newip='.host = "127.0.0.1";'
+        backend_newport='.port = "81";'
+
+        REP_NGINXPORT='127.0.0.1:81'
+
+        frontend_oldip=`grep DAEMON_OPTS /etc/sysconfig/varnish |grep -v "#" |awk '{print$2}'`
+        frontend_newip=':80'
+
+        replace "$backend_oldip" "$backend_newip" -- /etc/varnish/default.vcl &>/dev/null
+        replace "$backend_oldport" "$backend_newport" -- /etc/varnish/default.vcl &>/dev/null
+        replace "$frontend_oldip" "$frontend_newip" -- /etc/sysconfig/varnish &>/dev/null
+
+        /etc/init.d/varnish stop
+        /etc/init.d/nginx stop &>/dev/null
+        /etc/init.d/httpd stop &>/dev/null
+        /etc/init.d/varnish start
+else
+        REP_NGINXPORT=80
+fi
+
+####################################################################################
+
 
 cd ${BASE}
 wget -q $CONF_TEMPLATE_URL
@@ -484,6 +575,7 @@ EOF
 				replace REP_HOME "$HOME" -- $DOM_CONF > /dev/null 2>&1
 				replace REP_FPMPORT "$fpmport" -- $DOM_CONF > /dev/null 2>&1
                 replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
+				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1
   			    echo -e " - Generating $DOMAIN Configuration file\t\t [ ${Green}Done${NC} ]"
 
 		 	  fi
@@ -516,6 +608,7 @@ EOF
 				#replace REMOTE_IP $REMOTEIP -- $DOM_CONF > /dev/null 2>&1
 		        replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
 				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
+				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1	
 	            echo -e " - Generating $DOMAIN Configuration file\t\t [ ${Green}Done${NC} ]"
 		 	  fi
 
@@ -577,6 +670,15 @@ tar -xzf ntemplate.tar.gz > /dev/null 2>&1
 
 InsertSection "Generate NGINX Vhosts Configuration files"
 echo -e " - Generate Nginx.conf file\t\t\t\t [ ${Green}Done${NC} ]"
+#stop varnish if running 
+if [ -e /var/run/varnish.pid ]
+then
+        /etc/init.d/varnish stop
+        REP_NGINXPORT=80
+else
+        REP_NGINXPORT=80
+fi
+
    cd /var/cpanel/users
 
 if [ ! -d $NGINX_PATH/vhosts/  ]
@@ -621,7 +723,7 @@ EOF
 		        #replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
 				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
 				replace :82 :80 -- $DOM_CONF > /dev/null 2>&1
-
+i				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1
 	done
 done
 
@@ -843,11 +945,13 @@ do_Help()
 {
 
 		echo " "
- 		echo "${Red}[EasyNginx.sh v3.3.4.1]${NC}"
+ 		echo "${Red}[EasyNginx.sh v3.4.1-2]${NC}"
         echo "${Blue}Copyright (c) 2012, Fixed Solutions All rights reserved.${NC}"
         echo " "
         echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
+	echo
         echo "Usage : $0 [options] "
+	echo
  		echo " ${Yellow}Option            Meaning:${NC}"
 		echo " ${Yellow}------            --------${NC}"
         echo " ${LightGreen}-fpm${NC}		   ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
