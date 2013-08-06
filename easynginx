@@ -23,7 +23,7 @@ Apache_Port=82
 BASE=/usr/local/src/EasyNginx
 
 # Template Files :
-CONF_TEMPLATE_URL="$URL/ntemplate.tar.gz"
+CONF_TEMPLATE_URL="$URL/ntemplate-new.tar.gz"
 
 # Start Colors :
 DarkGrey="$(tput bold ; tput setaf 0)"
@@ -296,7 +296,7 @@ PAM_MAX=`echo $RAM_use/50 |bc`
 
 cd ${BASE}
 wget -q $CONF_TEMPLATE_URL
-tar -xzf ntemplate.tar.gz > /dev/null 2>&1
+tar -xzf  > /dev/null 2>&1
 
 mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
 cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
@@ -528,7 +528,7 @@ fi
 
 cd ${BASE}
 wget -q $CONF_TEMPLATE_URL
-tar -xzf ntemplate.tar.gz > /dev/null 2>&1
+tar -xzf ntemplate-new.tar.gz > /dev/null 2>&1
 
 InsertSection "Generate New NGINX Vhosts Configuration files"
 
@@ -657,7 +657,7 @@ mkdir -p /usr/local/src/EasyNginx/
 
 cd ${BASE}
 wget -q $CONF_TEMPLATE_URL
-tar -xzf ntemplate.tar.gz > /dev/null 2>&1
+tar -xzf ntemplate-new.tar.gz > /dev/null 2>&1
 
  mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
  cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
