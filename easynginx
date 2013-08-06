@@ -296,7 +296,7 @@ PAM_MAX=`echo $RAM_use/50 |bc`
 
 cd ${BASE}
 wget -q $CONF_TEMPLATE_URL
-tar -xzf  > /dev/null 2>&1
+tar -xzf ntemplate-new.tar.gz > /dev/null 2>&1
 
 mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
 cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
