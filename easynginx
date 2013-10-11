@@ -2,11 +2,11 @@
 # Script : EasyNginx
 # Version: 3.4.1
 # Coder  : Ahmed Kandil .. continual with Ahmed Tohamy, Mahmoud Ahmed, Ahmed Kamel
-# Last Update : 7-04-2013
+# Last Update : 10-10-2013
 
 # Set of Variables :
 
-URL=http://monitor.arabhosters.com/sources/nginx
+URL=https://monitor.arabhosters.com/sources/nginx
 # The link for Nginx init script
 nginxst="$URL/nginxinit"
 # The link for PHP-FPM init script
@@ -20,10 +20,11 @@ S_RPAF="$URL/mod_rpaf-0.6.tar.gz"
 NGINX_PATH=/usr/local/nginx
 FPM_PATH=/usr/local/php-fpm/etc
 Apache_Port=82
-BASE=/usr/local/src/EasyNginx
+BASE=/usr/share/EasyNginx
+Case=0
 
 # Template Files :
-CONF_TEMPLATE_URL="$URL/ntemplate-new.tar.gz"
+CONF_TEMPLATE_URL="$URL/ntemplate-basic.tar.gz"
 
 # Start Colors :
 DarkGrey="$(tput bold ; tput setaf 0)"
@@ -101,7 +102,7 @@ do_Nginx()
  yum install curl curl-devel.x86_64 -y
 
  cd /usr/local/src
-# wget http://nginx.org/download/nginx-1.4.1.tar.gz
+# wget --no-check-certificate http://nginx.org/download/nginx-1.4.1.tar.gz
 # tar zxvf nginx-1.4.1.tar.gz
 # cd nginx-1.4.1
 rm -rf nginx*
@@ -109,7 +110,7 @@ rm -rf nginx*
 #install the latest version of nginx
 latest_url=`curl http://wiki.nginx.org/Install |grep 'Stable.*' -A2 |grep -o 'http://.*nginx.*\.gz'`
 latest_version=`curl http://wiki.nginx.org/Install |grep 'Stable.*' -A2 |grep -o 'http://.*nginx.*\.gz' |awk -F'/' '{print$5}' |sed 's/.tar.gz//g'`
-wget $latest_url
+wget --no-check-certificate $latest_url
 tar xvfz ${latest_version}.tar.gz
 cd ${latest_version}
 
@@ -117,7 +118,7 @@ cd ${latest_version}
  make
  make install 
 
- wget $nginxst -O /etc/init.d/nginx
+ wget --no-check-certificate $nginxst -O /etc/init.d/nginx
  chmod +x /etc/init.d/nginx
  
  chkconfig --add nginx
@@ -136,41 +137,47 @@ do_phpfpm()
    yum install bzip2-devel.x86_64 -y
    yum install freetype-devel gmp-devel mhash-devel libcurl-devel
    cd /usr/local/src
-#   wget http://www.php.net/get/php-5.3.23.tar.gz/from/us1.php.net/mirror
+#   wget --no-check-certificate http://www.php.net/get/php-5.3.23.tar.gz/from/us1.php.net/mirror
 #   tar -xzvf php-5.3.23.tar.gz && cd php-5.3.23
 rm -rf php*
 
 #download the latest version of php
-php_package=`curl http://www.php.net/downloads.php#v5 |grep 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz'`
-php_version=`curl http://www.php.net/downloads.php#v5 |grep 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz' |sed 's/.tar.gz//g'`
+php_package=`curl http://www.php.net/downloads.php#v5 |grep -i 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz'`
+php_version=`curl http://www.php.net/downloads.php#v5 |grep -i 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz' |sed 's/.tar.gz//g'`
 php_url=http://www.php.net/get/$php_package/from/us1.php.net/mirror
-wget $php_url
+wget --no-check-certificate $php_url
 tar xvfz $php_package && cd $php_version
 
    ./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mhash
   
    make all
    make install
-   wget $phpfpm_conf -O  /usr/local/php-fpm/etc/php-fpm.conf
+   wget --no-check-certificate $phpfpm_conf -O  /usr/local/php-fpm/etc/php-fpm.conf
    #cp /usr/local/php-fpm/etc/{php-fpm.conf.default,php-fpm.conf}
    #sed -i 's/;pid/pid/gi' /usr/local/php-fpm/etc/php-fpm.conf
    #sed -i 's/;error_log/error_log/gi' /usr/local/php-fpm/etc/php-fpm.conf  
+   echo "include=/usr/local/php-fpm/etc/conf.d/*.conf" >> /usr/local/php-fpm/etc/php-fpm.conf
+   rm -rf /usr/share/EasyNginx
+   mkdir /usr/share/EasyNginx
+   cd ${BASE}
+   wget --no-check-certificate -q $CONF_TEMPLATE_URL
+   tar -xzf * >/dev/null 2>&1
    echo "include=/usr/local/php-fpm/etc/conf.d/*.conf" >> /usr/local/php-fpm/etc/php-fpm.conf
    if [ ! -e /usr/local/cpanel ] && [ ! -d $FPM_PATH/conf.d/  ]
    then
 	 mkdir $FPM_PATH/conf.d
 	 cp $BASE/nginx_template/default-fpm-site.tpl $FPM_PATH/conf.d/default-site.conf
    fi 
-   wget $phpini -O /usr/local/php-fpm/lib/php.ini
-   wget $phpfpm -O /etc/init.d/php-fpm 
+   wget --no-check-certificate $phpini -O /usr/local/php-fpm/lib/php.ini
+   wget --no-check-certificate $phpfpm -O /etc/init.d/php-fpm 
    chmod +x /etc/init.d/php-fpm
    chkconfig --add php-fpm
    chkconfig --levels 235 php-fpm on
 #convert php paths to php-fpm paths
-mv /usr/bin/php /usr/bin/php2
-mv /usr/local/bin/php /usr/local/bin/php2
-ln -s /usr/local/php-fpm/sbin/php-fpm /usr/local/bin/php
-ln -s /usr/local/php-fpm/sbin/php-fpm /usr/bin/php
+#mv /usr/bin/php /usr/bin/php2
+#mv /usr/local/bin/php /usr/local/bin/php2
+#ln -s /usr/local/php-fpm/sbin/php-fpm /usr/local/bin/php
+#ln -s /usr/local/php-fpm/sbin/php-fpm /usr/bin/php
 
    echo -e " -- PHP Installed\t\t\t [ ${Green}Done${NC} ] "
 }
@@ -246,7 +253,7 @@ then
 	echo "	- Please Check Mod_Rpaf Configuration Manually"
 else
 	echo -e "	- Download mod_rpaf Sources\t\t\t\t [ ${Green}Done${NC} ]"
-	wget -q $S_RPAF
+	wget --no-check-certificate -q $S_RPAF
 	tar -zxf mod_rpaf-0.6.tar.gz > /dev/null 2>&1
 	cd mod_rpaf-0.6
 	make rpaf-2.0 && make install-2.0 > /dev/null 2>&1
@@ -281,8 +288,8 @@ fi
 do_Config()
 {
 
-rm -rf /usr/local/src/EasyNginx/
-mkdir -p /usr/local/src/EasyNginx/
+rm -rf /usr/share/EasyNginx/
+mkdir -p /usr/share/EasyNginx/
 
 # Calcultaing the memory size
 RAM_SIZE=`free -m | grep Mem | awk '{print $2}'`
@@ -293,11 +300,13 @@ DCPU=`echo $CPU*2 |bc`
 RAM_use=`echo $RAM_SIZE*2/3 |bc`
 # To get The pm.max.childern as it equal = 2/3 of RAM divided of 50
 PAM_MAX=`echo $RAM_use/50 |bc`
-
 cd ${BASE}
-wget -q $CONF_TEMPLATE_URL
-tar -xzf ntemplate-new.tar.gz > /dev/null 2>&1
-
+if [ $Case == "1" ]
+then
+        CONF_TEMPLATE_URL="$URL/ntemplate-Microcaching.tar.gz"
+fi
+wget --no-check-certificate -q $CONF_TEMPLATE_URL
+tar -xzf * >/dev/null 2>&1
 mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
 cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
        
@@ -389,14 +398,14 @@ for USER in *
 			ROOT_HOME=`grep ^$USER: /etc/passwd|cut -d: -f6`;
 			IS_SUBDOM=`echo $DOMAIN|cut -d"." -f3`;
 			SUBDOM=`echo $DOMAIN|cut -d"." -f1`;
-			if [ "$IS_SUBDOM" = "com" ] || [ "$IS_SUBDOM" = "net" ] || [ "$IS_SUBDOM" = "org" ]
-			then
+			#if [ "$IS_SUBDOM" = "com" ] || [ "$IS_SUBDOM" = "net" ] || [ "$IS_SUBDOM" = "org" ]
+			#then
 				TXT="root   $ROOT_HOME/public_html/$SUBDOM; #$DOMAIN"
 			    HOME="$ROOT_HOME/public_html/$SUBDOM"
-			else
-				TXT="root   $ROOT_HOME/public_html; #$DOMAIN"
-				HOME="$ROOT_HOME/public_html"
-			fi
+			#else
+			#	TXT="root   $ROOT_HOME/public_html; #$DOMAIN"
+			#	HOME="$ROOT_HOME/public_html"
+			#fi
 
 			echo "[+] Converting $DOMAIN for $USER with $SUBDOM" >> /tmp/nginx_vh_list.tmp
 
@@ -475,15 +484,15 @@ vhostc=`ls /usr/local/nginx/vhosts/*.conf | wc -l`
 echo -e " - Current Virtual hosts Configuration\t\t\t [ ${vhostc} Account include SubDomains ]"
 echo -e " - Check /tmp/nginx_vh_list.tmp to View Full virtual host log"
 fi 
- 
+rm -rf /usr/share/EasyNginx/ 
 }
 
 # Make configuration files for new Added Domains/subdomains only
 do_AddNew_Config()
 {
 
-rm -rf /usr/local/src/EasyNginx/
-mkdir -p /usr/local/src/EasyNginx/
+rm -rf /usr/share/EasyNginx/
+mkdir -p /usr/share/EasyNginx/
 Vhosts_before=`ls $NGINX_PATH/vhosts/ |wc -l`
 # Calcultaing the memory size
 RAM_SIZE=`free -m | grep Mem | awk '{print $2}'`
@@ -527,9 +536,12 @@ fi
 
 
 cd ${BASE}
-wget -q $CONF_TEMPLATE_URL
-tar -xzf ntemplate-new.tar.gz > /dev/null 2>&1
-
+if [ $Case == "1" ]
+then
+        CONF_TEMPLATE_URL="$URL/ntemplate-Microcaching.tar.gz"
+fi
+wget --no-check-certificate -q $CONF_TEMPLATE_URL
+tar -xzf * > /dev/null 2>&1
 InsertSection "Generate New NGINX Vhosts Configuration files"
 
    cd /var/cpanel/users
@@ -543,14 +555,14 @@ InsertSection "Generate New NGINX Vhosts Configuration files"
 			ROOT_HOME=`grep ^$USER: /etc/passwd|cut -d: -f6`;
 			IS_SUBDOM=`echo $DOMAIN|cut -d"." -f3`;
 			SUBDOM=`echo $DOMAIN|cut -d"." -f1`;
-			if [ "$IS_SUBDOM" = "com" ] || [ "$IS_SUBDOM" = "net" ] || [ "$IS_SUBDOM" = "org" ]
-			then
+			#if [ "$IS_SUBDOM" = "com" ] || [ "$IS_SUBDOM" = "net" ] || [ "$IS_SUBDOM" = "org" ]
+			#then
 				TXT="root   $ROOT_HOME/public_html/$SUBDOM; #$DOMAIN"
 			    HOME="$ROOT_HOME/public_html/$SUBDOM"
-			else
-				TXT="root   $ROOT_HOME/public_html; #$DOMAIN"
-				HOME="$ROOT_HOME/public_html"
-			fi
+			#else
+			#	TXT="root   $ROOT_HOME/public_html; #$DOMAIN"
+			#	HOME="$ROOT_HOME/public_html"
+			#fi
 
 			echo "[+] Converting $DOMAIN for $USER with $SUBDOM" >> /tmp/nginx_vh_list.tmp
 
@@ -645,19 +657,19 @@ done
 vhostc=`ls /usr/local/nginx/vhosts/*.conf | wc -l`
 echo -e " - Current Virtual hosts Configuration\t\t\t [ ${vhostc} Account include SubDomains ]"
 echo -e " - Check /tmp/nginx_vh_list.tmp to View Full virtual host log"
-
+rm -rf /usr/share/EasyNginx/
 }
 
 # Configure Nginx as a reverse proxy for a remote server
 do_RemoteConfig ()
 {
 
-rm -rf /usr/local/src/EasyNginx/
-mkdir -p /usr/local/src/EasyNginx/
+rm -rf /usr/share/EasyNginx/
+mkdir -p /usr/share/EasyNginx/
 
 cd ${BASE}
-wget -q $CONF_TEMPLATE_URL
-tar -xzf ntemplate-new.tar.gz > /dev/null 2>&1
+wget --no-check-certificate -q $URL/ntemplate-rr.tar.gz
+tar -xzf ntemplate-rr.tar.gz > /dev/null 2>&1
 
  mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
  cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
@@ -674,9 +686,6 @@ echo -e " - Generate Nginx.conf file\t\t\t\t [ ${Green}Done${NC} ]"
 if [ -e /var/run/varnish.pid ]
 then
         /etc/init.d/varnish stop
-        REP_NGINXPORT=80
-else
-        REP_NGINXPORT=80
 fi
 
    cd /var/cpanel/users
@@ -693,18 +702,18 @@ for USER in *
    do
 	for DOMAIN in `cat $USER | grep ^DNS | cut -d= -f2`
 	   do
-
+			REP_NGINXPORT="80"
 			ROOT_HOME=`grep ^$USER: /etc/passwd|cut -d: -f6`;
 			IS_SUBDOM=`echo $DOMAIN|cut -d"." -f3`;
 			SUBDOM=`echo $DOMAIN|cut -d"." -f1`;
-			if [ "$IS_SUBDOM" = "com" ] || [ "$IS_SUBDOM" = "net" ] || [ "$IS_SUBDOM" = "org" ]
-			then
+			#if [ "$IS_SUBDOM" = "com" ] || [ "$IS_SUBDOM" = "net" ] || [ "$IS_SUBDOM" = "org" ]
+			#then
 				TXT="root   $ROOT_HOME/public_html/$SUBDOM; #$DOMAIN"
 			    HOME="$ROOT_HOME/public_html/$SUBDOM"
-			else
-				TXT="root   $ROOT_HOME/public_html; #$DOMAIN"
-				HOME="$ROOT_HOME/public_html"
-			fi
+			#else
+			#	TXT="root   $ROOT_HOME/public_html; #$DOMAIN"
+			#	HOME="$ROOT_HOME/public_html"
+			#fi
 
 			echo "[+] Converting $DOMAIN for $USER with $SUBDOM" >> /tmp/nginx_vh_list.tmp
 
@@ -723,7 +732,6 @@ EOF
 		        #replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
 				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
 				replace :82 :80 -- $DOM_CONF > /dev/null 2>&1
-i				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1
 	done
 done
 
@@ -746,7 +754,7 @@ echo -e " - Nginx Virtual Hosts Configuration\t\t\t [ ${Green}Done${NC} ]"
 vhostc=`ls /usr/local/nginx/vhosts/*.conf | wc -l`
 echo -e " - Current Virtual hosts Configuration\t\t\t [ ${vhostc} Account include SubDomains ]"
 echo -e " - Check /tmp/nginx_vh_list.tmp to View Full virtual host log"
-
+rm -rf /usr/share/EasyNginx/
 }
 
 do_LogRotate ()
@@ -827,7 +835,33 @@ EOF
 
 elif [ $fpm == "0" ]
 then
+        if [ $Case == "1" ]
+        then
+cat > /usr/local/cpanel/scripts/postwwwacctuser << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -r -nc -s", shell=True)
+EOF
 
+cat > /usr/local/cpanel/hooks/subdomain/addsubdomain << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -r -nc -s", shell=True)
+EOF
+
+cat > /usr/local/cpanel/hooks/addondomain/addaddondomain << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -r -nc -s", shell=True)
+EOF
+
+cat > /usr/local/cpanel/hooks/park/park << EOF
+#!/usr/bin/env python
+import subprocess
+subprocess.call("easynginx -r -nc -s", shell=True)
+EOF
+
+else
 cat > /usr/local/cpanel/scripts/postwwwacctuser << EOF
 #!/usr/bin/env python
 import subprocess
@@ -853,7 +887,7 @@ subprocess.call("easynginx -r -nc", shell=True)
 EOF
 
 fi
-
+fi
 cat > /scripts/before_apache_make << EOF
 #!/usr/bin/env python
 import subprocess
@@ -945,27 +979,35 @@ do_Help()
 {
 
 		echo " "
- 		echo "${Red}[EasyNginx.sh v3.4.1-2]${NC}"
+ 		echo "${Red}[EasyNginx.sh v3.4.1-4]${NC}"
         echo "${Blue}Copyright (c) 2012, Fixed Solutions All rights reserved.${NC}"
         echo " "
         echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
 	echo
         echo "Usage : $0 [options] "
 	echo
- 		echo " ${Yellow}Option            Meaning:${NC}"
-		echo " ${Yellow}------            --------${NC}"
-        echo " ${LightGreen}-fpm${NC}		   ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
-		echo " ${LightGreen}-r${NC}		   ${LightBlue}Installing Nginx as a reverse proxy${NC}"
-		echo " ${LightGreen}-rr${NC}	           ${LightBlue}Installing Nginx as a reverse proxy For a remote server${NC}"
-		echo " ${LightGreen}-fpm -c${NC}           ${LightBlue}Making VHosts when Nginx is standing alone (without Installing Nginx)${NC}"
-		echo " ${LightGreen}-r -c${NC}		   ${LightBlue}Making VHosts when Nginx is reverse proxy  (without Installing Nginx)${NC}"
-		echo " ${LightGreen}-fpm -nc${NC}	   ${LightBlue}Adding VHosts for new domains when Nginx is standing alone${NC}"
-		echo " ${LightGreen}-r -nc${NC}	           ${LightBlue}Adding VHosts for new domains when Nginx is reverse proxy${NC}"
-		echo " ${LightGreen}-rc${NC}	          ${LightBlue} Removing VHosts for Terminated Accounts${NC}"
-		echo " ${LightGreen}-rpaf${NC}		   ${LightBlue}Installing Rpaf module${NC}"
-		echo " ${LightGreen}-drpaf${NC}		   ${LightBlue}Disable Rpaf module${NC}"
-		echo " ${LightGreen}-logr${NC}	           ${LightBlue}If you have nginx and want to rotate logs${NC}"
+                echo " ${Yellow}Options              Meaning:${NC}"
+                echo " ${Yellow}-------              --------${NC}"
+        echo " ${LightGreen}-fpm${NC}                 ${LightBlue}Installing Nginx + PHP-FPM and make Nginx stands alone${NC}"
+                echo " ${LightGreen}-r${NC}                   ${LightBlue}Installing Nginx as a reverse proxy${NC}"
+                echo " ${LightGreen}-rr${NC}                  ${LightBlue}Installing Nginx as a reverse proxy For a remote server${NC}"
+                echo " ${LightGreen}-fpm -c${NC}              ${LightBlue}Making VHosts when Nginx is standing alone (without Installing Nginx)${NC}"
+                echo " ${LightGreen}-r -c${NC}                ${LightBlue}Making VHosts when Nginx is reverse proxy  (without Installing Nginx)${NC}"
+                echo " ${LightGreen}-fpm -nc${NC}             ${LightBlue}Adding VHosts for new domains when Nginx is standing alone${NC}"
+                echo " ${LightGreen}-r -nc${NC}               ${LightBlue}Adding VHosts for new domains when Nginx is reverse proxy${NC}"
+                echo " ${LightGreen}-rc${NC}                 ${LightBlue} Removing VHosts for Terminated Accounts${NC}"
+                echo " ${LightGreen}-rpaf${NC}                ${LightBlue}Installing Rpaf module${NC}"
+                echo " ${LightGreen}-drpaf${NC}               ${LightBlue}Disable Rpaf module${NC}"
+                echo " ${LightGreen}-logr${NC}                ${LightBlue}If you have nginx and want to rotate logs${NC}"
         echo ""
+                echo " ${Yellow}Advanced Options     Meaning:${NC}"
+                echo " ${Yellow}----------------     --------${NC}"
+                echo " ${LightGreen}-r -s${NC}                ${LightBlue}Installing Nginx as a reverse proxy${NC} ${Red}With Optimized Cache${NC}"
+                echo " ${LightGreen}-r -c -s${NC}             ${LightBlue}Making VHosts when Nginx is reverse proxy${NC} ${Red}With Optimized Cache${NC} ${LightBlue}(without Installing Nginx)${NC}"
+                echo " ${LightGreen}-r -nc -s${NC}            ${LightBlue}Adding VHosts for new domains when Nginx is reverse proxy${NC} ${Red}With Optimized Cache${NC}"
+                echo ""
+echo "${LightRed}[WARNNING]: It's Not Recommended To Use Case Options If You Use vbulletin Or Any Other Forums Scripts."
+echo ""
 }
 
 
@@ -1018,13 +1060,20 @@ if [ $# != "0" ]
 				do_CheckServices
 		  
  	  		fi
-        elif [ $1 == "-r" ]
-	  	then
-	       fpm="0"
-	       if [ $# == "2" ]
-	       then
-		 	if [ $2 == "-c" ]
-	        then 
+elif [ $1 == "-r" ]
+	then
+		fpm="0"
+		if [ $# == "3" ]
+		then
+			if [ $3 == "-s" ]
+			then
+				Case="1"
+			else
+				do_Help
+			fi
+
+			if [ $2 == "-c" ]
+			then 
 				do_Rpaf
 				do_Config
 				if [ -e /usr/local/cpanel ]
@@ -1032,7 +1081,40 @@ if [ $# != "0" ]
 					do_AddHooks
 				fi
 				do_tweak
-		        do_CheckServices
+				do_CheckServices
+			elif [ $2 == "-nc" ]
+			then 
+				do_AddNew_Config
+				do_CheckServices
+			else
+				do_Help
+ 			fi
+	        elif [ $# == "2" ]
+	        then
+			if [ $2 == "-s" ]
+			then
+				Case=1
+				do_Nginx
+                        	do_Rpaf
+                        	do_Config
+                        	if [ -e /usr/local/cpanel ]
+                        	then
+                                	do_AddHooks
+                        	fi
+                        	do_LogRotate
+                        	do_tweak
+                        	do_CheckServices
+
+			elif [ $2 == "-c" ]
+	        	then 
+				do_Rpaf
+				do_Config
+				if [ -e /usr/local/cpanel ]
+				then
+					do_AddHooks
+				fi
+				do_tweak
+		        	do_CheckServices
 			elif [ $2 == "-nc" ]
 			then 
 				do_AddNew_Config
@@ -1040,6 +1122,7 @@ if [ $# != "0" ]
 			else
 				do_Help
  		 	fi
+	       
 	       elif [ $# == "1" ]
 	       then
 			do_Nginx

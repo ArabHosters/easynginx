@@ -1,0 +1,15 @@
+@font-face { 
+     font-family: yasso; 
+     src: url('Yasso.otf'); 
+     font-weight:bold;
+     
+} 
+
+body {
+	margin:auto;
+	background-color: #fffff;
+	font:15px/18px yasso;color:#1188e6;background:#fff;
+
+
+}
+
