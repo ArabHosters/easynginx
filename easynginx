@@ -148,7 +148,7 @@ php_url=http://www.php.net/get/$php_package/from/us1.php.net/mirror
 wget --no-check-certificate $php_url
 tar xvfz $php_package && cd $php_version
 
-   ./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mhash
+./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mcrypt
   
    make all
    make install
