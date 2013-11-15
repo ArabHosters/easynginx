@@ -21,7 +21,7 @@ NGINX_PATH=/usr/local/nginx
 FPM_PATH=/usr/local/php-fpm/etc
 Apache_Port=82
 BASE=/usr/share/EasyNginx
-Case=0
+Advanced=0
 
 # Template Files :
 CONF_TEMPLATE_URL="$URL/ntemplate-basic.tar.gz"
@@ -132,6 +132,12 @@ cd ${latest_version}
 do_phpfpm()
 {
    InsertSection " -- Installing PHP -- "
+#Backup php-fpm directory if exists before installing
+if [ -d /usr/local/php-fpm/ ]
+then
+	mv /usr/local/php-fpm /usr/local/php-fpm.$(date +%F).$(date +%M) > /dev/null 2>&1
+fi
+#######################################
 
    yum install libxml2-devel bzip2-devel libjpeg-devel libX11-devel gd-devel libmcrypt-devel mysql-devel mhash-devel libevent-devel libtool-ltdl-devel curl-devel.x86_64 libc-client-devel.i386 libc-client-devel.i386 zlib-devel libpng-devel libxslt-devel -y
    yum install bzip2-devel.x86_64 -y
@@ -148,7 +154,7 @@ php_url=http://www.php.net/get/$php_package/from/us1.php.net/mirror
 wget --no-check-certificate $php_url
 tar xvfz $php_package && cd $php_version
 
-./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mcrypt
+./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-mcrypt --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mcrypt
   
    make all
    make install
@@ -214,7 +220,8 @@ echo -e " - Check for Nginx Configuration file\t\t\t [ ${Green}Done${NC} ]"
 InsertSection "Starting the required Service"
 if [ "$fpm" == "1" ]
  then
-   	  /etc/init.d/httpd stop 2>&1
+   	  /etc/init.d/httpd stop >/dev/null 2>&1
+	  /etc/init.d/php-fpm stop >/dev/null 2>&1
 	  /etc/init.d/php-fpm start
 	  /etc/init.d/php-fpm restart
  	  /etc/init.d/nginx start
@@ -301,7 +308,7 @@ RAM_use=`echo $RAM_SIZE*2/3 |bc`
 # To get The pm.max.childern as it equal = 2/3 of RAM divided of 50
 PAM_MAX=`echo $RAM_use/50 |bc`
 cd ${BASE}
-if [ $Case == "1" ]
+if [ $Advanced == "1" ]
 then
         CONF_TEMPLATE_URL="$URL/ntemplate-Microcaching.tar.gz"
 fi
@@ -421,6 +428,8 @@ for USER in *
 		 		if [ ! -d $FPM_PATH/conf.d/  ]
 			 	then
 					mkdir $FPM_PATH/conf.d
+				else
+					cp -rf $FPM_PATH/conf.d $FPM_PATH/conf.d.$(date +%F).$(date +%M) #> /dev/null 2>&1
 				fi
 
 			VHOST_TEMPLATE=`cat $BASE/nginx_template/nginx-phpfpm.conf.tpl`
@@ -536,7 +545,7 @@ fi
 
 
 cd ${BASE}
-if [ $Case == "1" ]
+if [ $Advanced == "1" ]
 then
         CONF_TEMPLATE_URL="$URL/ntemplate-Microcaching.tar.gz"
 fi
@@ -835,7 +844,7 @@ EOF
 
 elif [ $fpm == "0" ]
 then
-        if [ $Case == "1" ]
+        if [ $Advanced == "1" ]
         then
 cat > /usr/local/cpanel/scripts/postwwwacctuser << EOF
 #!/usr/bin/env python
@@ -1006,7 +1015,7 @@ do_Help()
                 echo " ${LightGreen}-r -c -s${NC}             ${LightBlue}Making VHosts when Nginx is reverse proxy${NC} ${Red}With Optimized Cache${NC} ${LightBlue}(without Installing Nginx)${NC}"
                 echo " ${LightGreen}-r -nc -s${NC}            ${LightBlue}Adding VHosts for new domains when Nginx is reverse proxy${NC} ${Red}With Optimized Cache${NC}"
                 echo ""
-echo "${LightRed}[WARNNING]: It's Not Recommended To Use Case Options If You Use vbulletin Or Any Other Forums Scripts."
+echo "${LightRed}[WARNNING]: It's Not Recommended To Use Advanced Options If You Use vbulletin Or Any Other Forums Scripts."
 echo ""
 }
 
@@ -1067,7 +1076,7 @@ elif [ $1 == "-r" ]
 		then
 			if [ $3 == "-s" ]
 			then
-				Case="1"
+				Advanced="1"
 			else
 				do_Help
 			fi
@@ -1093,7 +1102,7 @@ elif [ $1 == "-r" ]
 	        then
 			if [ $2 == "-s" ]
 			then
-				Case=1
+				Advanced=1
 				do_Nginx
                         	do_Rpaf
                         	do_Config
