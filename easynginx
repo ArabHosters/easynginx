@@ -6,7 +6,7 @@
 
 # Set of Variables :
 
-URL=https://monitor.arabhosters.com/sources/nginx
+URL=https://monitor.serversadmins.com/sources/nginx
 # The link for Nginx init script
 nginxst="$URL/nginxinit"
 # The link for PHP-FPM init script
