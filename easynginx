@@ -1017,7 +1017,7 @@ do_Help()
                 echo " ${LightGreen}-r -c -s${NC}             ${LightBlue}Making VHosts when Nginx is reverse proxy${NC} ${Red}With Optimized Cache${NC} ${LightBlue}(without Installing Nginx)${NC}"
                 echo " ${LightGreen}-r -nc -s${NC}            ${LightBlue}Adding VHosts for new domains when Nginx is reverse proxy${NC} ${Red}With Optimized Cache${NC}"
                 echo ""
-echo "${LightRed}[WARNNING]: It's Not Recommended To Use Advanced Options If You Use vbulletin Or Any Other Forums Scripts."
+echo "${LightRed}[WARNNING]: It's Not Recommended To Use Advanced Options If You Use vbulletin Or Any Other Forums Scripts.${NC}"
 echo ""
 }
 
