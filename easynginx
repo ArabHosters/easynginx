@@ -148,11 +148,13 @@ fi
 rm -rf php*
 
 #download the latest version of php
-php_package=`curl http://www.php.net/downloads.php#v5 |grep -i 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz'`
-php_version=`curl http://www.php.net/downloads.php#v5 |grep -i 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz' |sed 's/.tar.gz//g'`
-php_url=http://www.php.net/get/$php_package/from/us1.php.net/mirror
-wget --no-check-certificate $php_url
-tar xvfz $php_package && cd $php_version
+#php_package=`curl http://www.php.net/downloads.php#v5 |grep -i 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz'`
+#php_version=`curl http://www.php.net/downloads.php#v5 |grep -i 'PHP 5\.3.*Old stable' -A9 |grep -o 'php-.*\.tar\.gz' |sed 's/.tar.gz//g'`
+#php_url=http://www.php.net/get/$php_package/from/us1.php.net/mirror
+php_version=php-5.3.28
+php_url=http://fr2.php.net/get/php-5.3.28.tar.gz/from/this/mirror
+wget --no-check-certificate -O ${php_version}.tar.gz $php_url
+tar xvfz ${php_version}.tar.gz && cd $php_version
 
 ./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-mcrypt --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mcrypt
   
