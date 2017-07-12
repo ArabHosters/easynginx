@@ -30,11 +30,11 @@ included in the project:
 
    ```bash
    # Clone your fork of the repo into the current directory
-   git clone https://github.com/<your-username>/server-configs-nginx.git
+   git clone https://github.com/<your-username>/easynginx.git
    # Navigate to the newly cloned directory
-   cd server-configs-nginx
+   cd easynginx
    # Assign the original repo to a remote called "upstream"
-   git remote add upstream https://github.com/h5bp/server-configs-nginx
+   git remote add upstream https://github.com/h5bp/easynginx
    ```
 
 2. If you cloned a while ago, get the latest changes from upstream:
