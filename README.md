@@ -1,6 +1,7 @@
 # EasyNginx 
 
-Simple BashScript installing Nginx as reverse proxy for cPanel Apache Edit
+Simple BashScript installing Nginx as reverse proxy for cPanel Apache and Nginx + PHP-FPM Edit
+
 
 # Usage 
 
