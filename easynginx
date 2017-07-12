@@ -1,12 +1,12 @@
 #!/bin/bash
 # Script : EasyNginx
 # Version: 3.4.1
-# Coder  : Ahmed Kandil .. continual with Ahmed Tohamy, Mahmoud Ahmed, Ahmed Kamel
+# Authoer  : Ahmed Kandil .. continual with Ahmed Tohamy, Mahmoud Ahmed, Ahmed Kamel, Ahmed Fouad, Mahmoud Saad
 # Last Update : 10-10-2013
 
 # Set of Variables :
 
-URL=https://monitor.serversadmins.com/sources/nginx
+URL="./"
 # The link for Nginx init script
 nginxst="$URL/nginxinit"
 # The link for PHP-FPM init script
@@ -55,18 +55,18 @@ InsertSection "-- Checking and Installing the required repos --"
 rel=`cat /etc/redhat-release | cut -d" " -f3 | cut -d"." -f1`
 ver=`uname -a | cut -d" " -f12`
      if [ -e /etc/yum.repos.d/epel.repo ] && [ -e /etc/yum.repos.d/centalt.repo ]
-        then 
+        then
 	  echo -e " - You Have the required repos\t\t\t         [ ${Green}Done${NC} ] "
-	 else (  	
+	 else (
 	    if [ $rel == "5" ]
 	    then (
     	     if [ $ver == "x86_64" ]
              then (
 		   		 rpm -Uvh http://mirror.de.leaseweb.net/epel/5/x86_64/epel-release-5-4.noarch.rpm
  			      )
- 
+
 	         else
-	    		rpm -Uvh http://download.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm	
+	    		rpm -Uvh http://download.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
 	         fi
 		     )
 	    elif [ $rel == "6" ]
@@ -82,7 +82,7 @@ ver=`uname -a | cut -d" " -f12`
 		     )
 	    else
 	  			InsertSection "this script only for RedHat and CentOS "
-	 	fi 
+	 	fi
              )
 	 fi
 
@@ -94,7 +94,7 @@ do_Nginx()
 
  do_repo
  InsertSection " -- Installing Nginx -- "
- yum install pcre-devel.x86_64 openssl.x86_64 openssl-devel.x86_64 -y #> | tee -a $LOGFILE 
+ yum install pcre-devel.x86_64 openssl.x86_64 openssl-devel.x86_64 -y #> | tee -a $LOGFILE
  #yum install google-perftools* -y
  yum install gcc* -y
  yum install pcre-devel* -y
@@ -114,13 +114,13 @@ wget --no-check-certificate $latest_url
 tar xvfz ${latest_version}.tar.gz
 cd ${latest_version}
 
- ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_ssl_module 
+ ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_ssl_module
  make
- make install 
+ make install
 
  wget --no-check-certificate $nginxst -O /etc/init.d/nginx
  chmod +x /etc/init.d/nginx
- 
+
  chkconfig --add nginx
  chkconfig --level 345 nginx on
 
@@ -157,13 +157,13 @@ wget --no-check-certificate -O ${php_version}.tar.gz $php_url
 tar xvfz ${php_version}.tar.gz && cd $php_version
 
 ./configure --prefix=/usr/local/php-fpm --with-mysql --with-gd --with-gettext --with-libdir=lib64 --with-iconv --enable-fpm --enable-mbstring --with-mysqli --with-mcrypt --with-openssl --with-pcre-dir --with-pcre-regex --enable-sockets --enable-wddx --with-pdo-mysql --enable-exif --enable-zip --enable-sysvshm --with-bz2 --with-pic --with-xmlrpc --enable-bcmath --enable-calendar --with-jpeg-dir --with-zlib --with-curl --with-config-file-scan-dir='/usr/local/php-fpm/lib/php.d' --with-freetype-dir --with-png-dir --with-xpm-dir --enable-gd-native-ttf --with-gmp --enable-ftp --enable-magic-quotes --enable-sysvsem --enable-sysvshm --enable-sysvmsg --with-kerberos --enable-shmop --with-libxml-dir --enable-xml --with-mcrypt
-  
+
    make all
    make install
    wget --no-check-certificate $phpfpm_conf -O  /usr/local/php-fpm/etc/php-fpm.conf
    #cp /usr/local/php-fpm/etc/{php-fpm.conf.default,php-fpm.conf}
    #sed -i 's/;pid/pid/gi' /usr/local/php-fpm/etc/php-fpm.conf
-   #sed -i 's/;error_log/error_log/gi' /usr/local/php-fpm/etc/php-fpm.conf  
+   #sed -i 's/;error_log/error_log/gi' /usr/local/php-fpm/etc/php-fpm.conf
    echo "include=/usr/local/php-fpm/etc/conf.d/*.conf" >> /usr/local/php-fpm/etc/php-fpm.conf
    rm -rf /usr/share/EasyNginx
    mkdir /usr/share/EasyNginx
@@ -175,9 +175,9 @@ tar xvfz ${php_version}.tar.gz && cd $php_version
    then
 	 mkdir $FPM_PATH/conf.d
 	 cp $BASE/nginx_template/default-fpm-site.tpl $FPM_PATH/conf.d/default-site.conf
-   fi 
+   fi
    wget --no-check-certificate $phpini -O /usr/local/php-fpm/lib/php.ini
-   wget --no-check-certificate $phpfpm -O /etc/init.d/php-fpm 
+   wget --no-check-certificate $phpfpm -O /etc/init.d/php-fpm
    chmod +x /etc/init.d/php-fpm
    chkconfig --add php-fpm
    chkconfig --levels 235 php-fpm on
@@ -190,7 +190,7 @@ tar xvfz ${php_version}.tar.gz && cd $php_version
    echo -e " -- PHP Installed\t\t\t [ ${Green}Done${NC} ] "
 }
 
-# Edit tweak settings 
+# Edit tweak settings
 do_tweak()
 {
 if [ "$fpm" == "1" ]
@@ -198,7 +198,7 @@ if [ "$fpm" == "1" ]
       chkconfig --levels 235 httpd off
 elif [ "$fpm" == "0" ]
 	then
-      chkconfig --levels 235 httpd on	 
+      chkconfig --levels 235 httpd on
 	  if [ -e /usr/local/cpanel ]
  	  then
 		 replace ":80" ":$Apache_Port" -- /usr/local/apache/conf/httpd.conf > /dev/null 2>&1
@@ -211,10 +211,10 @@ elif [ "$fpm" == "0" ]
 	  else
          replace "80" "$Apache_Port" -- /etc/httpd/conf/httpd.conf > /dev/null 2>&1
 	  fi
-fi		 		
+fi
 }
 
-# This function check the services 
+# This function check the services
 do_CheckServices()
 {
 
@@ -228,15 +228,15 @@ if [ "$fpm" == "1" ]
 	  /etc/init.d/php-fpm restart
  	  /etc/init.d/nginx start
       /etc/init.d/nginx restart
-	
+
 elif [ "$fpm" == "0" ]
- then      
+ then
       /etc/init.d/php-fpm stop > /dev/null 2>&1
      # /etc/init.d/httpd restart
 	killall -9 httpd &>/dev/null
         /etc/init.d/httpd start
 	  /etc/init.d/nginx start
-	  /etc/init.d/nginx restart		
+	  /etc/init.d/nginx restart
 fi
 }
 
@@ -318,7 +318,7 @@ wget --no-check-certificate -q $CONF_TEMPLATE_URL
 tar -xzf * >/dev/null 2>&1
 mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
 cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
-       
+
 IP=`hostname -i`
 CPU=`cat /proc/cpuinfo |grep -c '^processor'`
 replace REP_IP $IP -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
@@ -362,7 +362,7 @@ if [ ! -e /usr/local/cpanel ]
 
 	InsertSection "Generating NGINX Configuration files"
 	echo -e " - Generate Nginx.conf file\t\t\t\t [ ${Green}Done${NC} ]"
-  	
+
 	cp -R -f $BASE/nginx_template/maintenance /usr/local/nginx/html/
     chown -R apache.apache  /usr/local/nginx/html/maintenance
 
@@ -372,7 +372,7 @@ if [ ! -e /usr/local/cpanel ]
 cat > $NGINX_PATH/vhosts/default.conf << EOF
 $VHOST_TEMPLATE
 EOF
-          
+
     elif [ "$fpm" == "0" ]
 	  then
           VHOST_TEMPLATE=`cat $BASE/nginx_template/NocPanel-reverse.tpl`
@@ -382,9 +382,9 @@ EOF
 		IP=`hostname -i`
     	replace REP_IP $IP -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1
         replace REP_Apache_Port $Apache_Port -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1
-	replace REP_NGINXPORT $REP_NGINXPORT -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1	
+	replace REP_NGINXPORT $REP_NGINXPORT -- $NGINX_PATH/vhosts/default.conf > /dev/null 2>&1
     fi
-  
+
 else
 
 InsertSection "Generate NGINX Vhosts Configuration files"
@@ -456,8 +456,8 @@ EOF
 				replace REP_DCPU $DCPU -- $DOM_FPM_CONF > /dev/null 2>&1
 				replace REP_DOMAIN $DOMAIN -- $DOM_FPM_CONF > /dev/null 2>&1
 				replace REP_FPMPORT $fpmport -- $DOM_FPM_CONF > /dev/null 2>&1
-			    replace REP_USER $USER 	-- $DOM_FPM_CONF > /dev/null >&1	                
-				fpmport=`echo $[1 + $fpmport]`	
+			    replace REP_USER $USER 	-- $DOM_FPM_CONF > /dev/null >&1
+				fpmport=`echo $[1 + $fpmport]`
 
 			elif [ "$fpm" == "0" ]
 			then
@@ -485,8 +485,8 @@ do
 		TXT="/$SUBDOM;"
 		DOM_CONF=/usr/local/nginx/vhosts/$DOMAIN.conf
 		replace $TXT REPLACE_VAR -- $DOM_CONF > /dev/null 2>&1
-		replace "REPLACE_VAR" ";" -- $DOM_CONF > /dev/null 2>&1 
-       
+		replace "REPLACE_VAR" ";" -- $DOM_CONF > /dev/null 2>&1
+
 	done
 done
 
@@ -494,8 +494,8 @@ echo -e " - Nginx Virtual Hosts Configuration\t\t\t [ ${Green}Done${NC} ]"
 vhostc=`ls /usr/local/nginx/vhosts/*.conf | wc -l`
 echo -e " - Current Virtual hosts Configuration\t\t\t [ ${vhostc} Account include SubDomains ]"
 echo -e " - Check /tmp/nginx_vh_list.tmp to View Full virtual host log"
-fi 
-rm -rf /usr/share/EasyNginx/ 
+fi
+rm -rf /usr/share/EasyNginx/
 }
 
 # Make configuration files for new Added Domains/subdomains only
@@ -580,11 +580,11 @@ InsertSection "Generate New NGINX Vhosts Configuration files"
 			DOM_CONF=$NGINX_PATH/vhosts/$DOMAIN.conf
 		  	DOM_FPM_CONF=$FPM_PATH/conf.d/$DOMAIN.conf
 		 	userid=`id $USER | awk '{print $1}' | cut -d= -f2 | cut -d"(" -f1`
-  		 	fpmport=9$userid 
+  		 	fpmport=9$userid
 			if [ "$fpm" == "1" ]
 			then
 
-		 	  if [ ! -e $DOM_CONF ] 
+		 	  if [ ! -e $DOM_CONF ]
 		 	  then
 				  VHOST_TEMPLATE=`cat $BASE/nginx_template/nginx-phpfpm.conf.tpl`
 				  FPM_SITE_TEMPLATE=`cat $BASE/nginx_template/fpm-site.tpl`
@@ -603,7 +603,7 @@ EOF
 
 		 	  fi
 
-		 	  if [ ! -e $DOM_FPM_CONF ] 
+		 	  if [ ! -e $DOM_FPM_CONF ]
 		 	  then
 cat > $DOM_FPM_CONF << EOF
 $FPM_SITE_TEMPLATE
@@ -613,15 +613,15 @@ EOF
 				replace REP_DCPU $DCPU -- $DOM_FPM_CONF > /dev/null 2>&1
 				replace REP_DOMAIN $DOMAIN -- $DOM_FPM_CONF > /dev/null 2>&1
 				replace REP_FPMPORT $fpmport -- $DOM_FPM_CONF > /dev/null 2>&1
-			    replace REP_USER $USER 	-- $DOM_FPM_CONF > /dev/null >&1	                
+			    replace REP_USER $USER 	-- $DOM_FPM_CONF > /dev/null >&1
 				fpmport=`echo $[1 + $fpmport]`
-	    	  fi	
+	    	  fi
 
 			elif [ "$fpm" == "0" ]
 			then
-		 	  if [ ! -e $DOM_CONF ] 
+		 	  if [ ! -e $DOM_CONF ]
 	          then
-			
+
 				VHOST_TEMPLATE=`cat $BASE/nginx_template/nginx-reverse.conf.tpl`
 cat > $DOM_CONF << EOF
 $VHOST_TEMPLATE
@@ -631,12 +631,12 @@ EOF
 				#replace REMOTE_IP $REMOTEIP -- $DOM_CONF > /dev/null 2>&1
 		        replace REP_IP $IP -- $DOM_CONF > /dev/null 2>&1
 				replace REP_TXT "$TXT" -- $DOM_CONF > /dev/null 2>&1
-				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1	
+				replace REP_NGINXPORT $REP_NGINXPORT -- $DOM_CONF > /dev/null 2>&1
 	            echo -e " - Generating $DOMAIN Configuration file\t\t [ ${Green}Done${NC} ]"
 		 	  fi
 
 			fi
-		
+
 	done
 done
 
@@ -660,8 +660,8 @@ do
 		TXT="/$SUBDOM;"
 		DOM_CONF=/usr/local/nginx/vhosts/$DOMAIN.conf
 		replace $TXT REPLACE_VAR -- $DOM_CONF > /dev/null 2>&1
-		replace "REPLACE_VAR" ";" -- $DOM_CONF > /dev/null 2>&1 
-       
+		replace "REPLACE_VAR" ";" -- $DOM_CONF > /dev/null 2>&1
+
 	done
 done
 
@@ -684,7 +684,7 @@ tar -xzf ntemplate-rr.tar.gz > /dev/null 2>&1
 
  mv  $NGINX_PATH/conf/nginx.conf  $NGINX_PATH/conf/nginx.conf.default
  cp -f $BASE/nginx_template/main.template $NGINX_PATH/conf/nginx.conf
-       
+
  IP=`hostname -i`
  CPU=`cat /proc/cpuinfo |grep -c '^processor'`
  replace REP_IP $IP -- $NGINX_PATH/conf/nginx.conf > /dev/null 2>&1
@@ -693,7 +693,7 @@ tar -xzf ntemplate-rr.tar.gz > /dev/null 2>&1
 
 InsertSection "Generate NGINX Vhosts Configuration files"
 echo -e " - Generate Nginx.conf file\t\t\t\t [ ${Green}Done${NC} ]"
-#stop varnish if running 
+#stop varnish if running
 if [ -e /var/run/varnish.pid ]
 then
         /etc/init.d/varnish stop
@@ -756,8 +756,8 @@ do
 		TXT="/$SUBDOM;"
 		DOM_CONF=/usr/local/nginx/vhosts/$DOMAIN.conf
 		replace $TXT REPLACE_VAR -- $DOM_CONF > /dev/null 2>&1
-		replace "REPLACE_VAR" ";" -- $DOM_CONF > /dev/null 2>&1 
-       
+		replace "REPLACE_VAR" ";" -- $DOM_CONF > /dev/null 2>&1
+
 	done
 done
 
@@ -775,7 +775,7 @@ if [ ! -e /usr/local/nginx  ]
   then
 
 echo "NGINX NOT INSTALLED IN SERVER"
-        
+
 else
 
 sed -i 's@weekly@daily@' /etc/logrotate.conf
@@ -807,7 +807,7 @@ echo "/usr/local/nginx/on {
 " > /etc/logrotate.d/nginx
 logrotate -v /etc/logrotate.conf /etc/logrotate.d/nginx > /dev/null 2>&1
 
-fi 
+fi
 
 }
 
@@ -1034,15 +1034,15 @@ if [ $# != "0" ]
         if [ ! -e /usr/local/cpanel ] && [ ! -e /etc/init.d/mysqld ]
         then
 		do_mysql
-        fi 
-  
+        fi
+
 	    if [ $1 == "-fpm" ]
 	    then
 		    fpm="1"
 	       	if [ $# == "2" ]
 	       	then
 		  	 if [ $2 == "-c" ]
-		  	 then 
+		  	 then
 			  	do_Config
 			  	if [ -e /usr/local/cpanel ]
 			  	then
@@ -1056,20 +1056,20 @@ if [ $# != "0" ]
 		  	 else
 				do_Help
  		  	 fi
-		
+
 		  	elif [ $# == "1" ]
 		  	then
 				do_Nginx
-				do_phpfpm 
+				do_phpfpm
 				do_Config
   			 	if [ -e /usr/local/cpanel ]
 			 	then
 					do_AddHooks
-			 	fi 
+			 	fi
 				do_LogRotate
 				do_tweak
 				do_CheckServices
-		  
+
  	  		fi
 elif [ $1 == "-r" ]
 	then
@@ -1084,7 +1084,7 @@ elif [ $1 == "-r" ]
 			fi
 
 			if [ $2 == "-c" ]
-			then 
+			then
 				do_Rpaf
 				do_Config
 				if [ -e /usr/local/cpanel ]
@@ -1094,7 +1094,7 @@ elif [ $1 == "-r" ]
 				do_tweak
 				do_CheckServices
 			elif [ $2 == "-nc" ]
-			then 
+			then
 				do_AddNew_Config
 				do_CheckServices
 			else
@@ -1117,7 +1117,7 @@ elif [ $1 == "-r" ]
                         	do_CheckServices
 
 			elif [ $2 == "-c" ]
-	        	then 
+	        	then
 				do_Rpaf
 				do_Config
 				if [ -e /usr/local/cpanel ]
@@ -1127,13 +1127,13 @@ elif [ $1 == "-r" ]
 				do_tweak
 		        	do_CheckServices
 			elif [ $2 == "-nc" ]
-			then 
+			then
 				do_AddNew_Config
 				do_CheckServices
 			else
 				do_Help
  		 	fi
-	       
+
 	       elif [ $# == "1" ]
 	       then
 			do_Nginx
@@ -1142,16 +1142,16 @@ elif [ $1 == "-r" ]
 		    if [ -e /usr/local/cpanel ]
 			then
 				do_AddHooks
-			fi 
+			fi
 			do_LogRotate
 			do_tweak
 			do_CheckServices
-	  
+
  	       fi
 
 	    elif [ $1 == "-drpaf" ]
 	  	then
-			do_DisableRPAF 
+			do_DisableRPAF
 	  	elif [ $1 == "-rpaf" ]
 	  	then
 			do_Rpaf
@@ -1186,16 +1186,11 @@ elif [ $1 == "-r" ]
 		  echo ""
 		  do_Help
 	    fi
-     else 
+     else
  		do_Help
-     fi 
-     
+     fi
+
       )
-else 
+else
 	do_Help
 fi
-
-
-
-
-
