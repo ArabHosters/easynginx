@@ -22,6 +22,7 @@ Usage  ./easynginx -options
  |  -logr |                 If you have nginx and want to rotate logs | 
 
  |  Advanced Options   |    Description  | 
+ | ------------- |:-------------:|
  |  -r -s  |                Installing Nginx as a reverse proxy With Optimized Cache | 
   | -r -c -s   |            Making VHosts when Nginx is reverse proxy With Optimized Cache (without Installing Nginx) | 
  |  -r -nc -s        |      Adding VHosts for new domains when Nginx is reverse proxy With Optimized Cache | 
