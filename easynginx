@@ -991,7 +991,7 @@ do_Help()
 
 		echo " "
  		echo "${Red}[EasyNginx.sh v3.4.1-6]${NC}"
-        echo "${Blue}Copyright (c) 2012, Fixed Solutions All rights reserved.${NC}"
+        echo "${Blue}Copyright (c) 2012, ArabHosters All rights reserved.${NC}"
         echo " "
         echo "${Blue}It Build LEMP (EngineX - Mysql - PHP) AND/OR Configuring VHosts${NC}"
 	echo
