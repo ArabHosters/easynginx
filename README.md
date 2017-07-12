@@ -21,7 +21,9 @@ Usage  ./easynginx -options
  |  -drpaf   |              Disable Rpaf module | 
  |  -logr |                 If you have nginx and want to rotate logs | 
 
- |  Advanced Options   |    Description  | 
+# Advanced Options
+
+ |Options     |         Description|
  | ------------- |:-------------:|
  |  -r -s  |                Installing Nginx as a reverse proxy With Optimized Cache | 
   | -r -c -s   |            Making VHosts when Nginx is reverse proxy With Optimized Cache (without Installing Nginx) | 
